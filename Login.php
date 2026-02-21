@@ -1,5 +1,51 @@
 <?php
+
+require_once "includes/conn.php";
 session_start();
+
+if (isset($_POST['Login'])) {
+
+    $Email = $_POST['Email'];
+    $Password = $_POST['Password'];
+    $query = "SELECT * FROM `users` WHERE Email = '$Email'";
+    $result = mysqli_query($conn, $query);
+
+    if (mysqli_num_rows($result) == 1) {
+        $user = mysqli_fetch_assoc($result);
+        if (password_verify($Password, $user['Password'])) {
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['user_name'] = $user['Name'];
+            $_SESSION['user_role'] = $user['Role'];
+            if ($user['Role'] == "admin") {
+                header("location:admin/admin.php");
+                exit();
+            } else if ($user['Role'] == "teacher" ) {
+                header("location:../teacher.php");
+exit();
+            } else if($user['Role'] == "student" ){
+                 if ($user['Status'] == "Approved") {
+                    header("Location: student/student.php");
+                    exit();
+                } else {
+                    $_SESSION['error'] = "Your account is not approved yet!";
+                    header("Location: Pending.php");
+                    exit();
+                }
+
+            }
+                   } else {
+            $_SESSION['error'] = "Invalid Password!";
+            header("Location: ../Login.php");
+            exit();
+        }
+
+    } else {
+        $_SESSION['error'] = "Invalid Email!";
+        header("Location: ../Login.php");
+        exit();
+    }
+}
+
 
 ?>
 
@@ -35,12 +81,12 @@ session_start();
                     <div class="card-body p-sm-5">
                         <h2 class="fs-20 fw-bolder mb-4 text-center">Student Management System</h2>
                         <h4 class="fs-13 fw-bold mb-2 text-center">Login to your account</h4>
-                        <form action="index.html" class="w-100 mt-4 pt-2" method="post">
+                        <form action="" class="w-100 mt-4 pt-2" method="post">
                             <div class="mb-4">
-                                <input type="email" class="form-control" placeholder="Email " value="wrapcode.info@gmail.com" name="Email" required>
+                                <input type="email" class="form-control" placeholder="Email "  name="Email" required>
                             </div>
                             <div class="mb-3">
-                                <input type="password" class="form-control" placeholder="Password" value="123456" name="Password" required>
+                                <input type="password" class="form-control" placeholder="Password"  name="Password" required>
                             </div>
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
@@ -54,7 +100,7 @@ session_start();
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <button type="submit" class="btn btn-lg btn-primary w-100">Login</button>
+                                <button type="submit" class="btn btn-lg btn-primary w-100" name="Login">Login</button>
                             </div>
                         </form>
                         <div class="w-100 mt-4 text-center mx-auto">
@@ -73,7 +119,7 @@ session_start();
                         </div>
                         <div class="mt-4 text-muted">
                             <span> Don't have an account?</span>
-                            <a href="auth-register-minimal.html" class="fw-bold">Create an Account</a>
+                            <a href="Register.php" class="fw-bold">Create an Account</a>
                         </div>
                     </div>
                 </div>

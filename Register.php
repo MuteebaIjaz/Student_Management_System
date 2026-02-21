@@ -1,7 +1,38 @@
 <?php
 require_once "includes/conn.php";
 session_start();
+if(isset($_POST['Register'])){
+    $Name = $_POST['Name'];
+    $Email =$_POST['Email'];
+    $Password = $_POST['Password'];
+    $ConfirmPass = $_POST['ConfirmPass'];
+    $Role="student";
+    $Status = "pending";
 
+ if($Password !== $ConfirmPass ){
+        $_SESSION['error']="Passwords donot match.";
+          header("Location:Register.php");
+        exit();
+    }
+
+    $select_query= "SELECT * FROM `users` WHERE Email = '$Email'";
+    $select_result=mysqli_query($conn,$select_query);
+    if(mysqli_num_rows($select_result) > 1){
+        $_SESSION['error']="Email Already Exists.";
+        header("Loaction:Register.php");
+        exit();
+    }
+   
+    $hashed_password = password_hash($Password,PASSWORD_DEFAULT);
+
+    $query="INSERT INTO `users` 
+    (Name , Email, Password , Role , Status) VALUES 
+    ('$Name','$Email','$hashed_password','$Role','$Status') ";
+    $result= mysqli_query($conn , $query);
+    if($result){
+        header("Location: Pending.php");
+    }
+}
 
 ?>
 
@@ -33,6 +64,18 @@ session_start();
                     <div class="card-body p-sm-5">
                         <h2 class="fs-20 fw-bolder mb-4 text-center">Student Management System</h2>
                         <h4 class="fs-13 fw-bold mb-2 text-center">Register Yourself</h4>
+
+                        <?php
+                       if( isset($_SESSION['error'])){
+                        echo "<div class='w-100 mt-4 pt-2 text-danger'>".$_SESSION['error']."</div>";
+                         unset($_SESSION['error']);
+                        }
+                        if( isset($_SESSION['success'])){
+                        echo "<div class='w-100 mt-4 pt-2 text-success'>".$_SESSION['success']."</div>";
+                         unset($_SESSION['success']);
+                        }
+                       
+                        ?>
                         <form action="" method="post" class="w-100 mt-4 pt-2">
                             <div class="mb-4">
                                 <input type="text" class="form-control" placeholder="Full Name" name="Name" required>

@@ -1,0 +1,166 @@
+    .registration-container {
+            background-color: #f8f9fa;
+            padding: 30px 0;
+            border-radius: 8px;
+        }
+
+        .registration-table-card {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .registration-table-header {
+            background:  #667eea;
+            color: white;
+            padding: 20px;
+            border-bottom: 3px solid #667eea;
+            
+        }
+
+        .registration-table-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .registration-table {
+            margin-bottom: 0;
+        }
+
+        .registration-table thead {
+            background-color: #f1f3f5;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .registration-table thead th {
+            color: #495057;
+            font-weight: 600;
+            padding: 16px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border: none;
+            vertical-align: middle;
+        }
+
+        .registration-table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-color: #e9ecef;
+            font-size: 0.95rem;
+        }
+
+        .registration-table tbody tr {
+            transition: background-color 0.3s ease;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .registration-table tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .registration-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .btn-sm-action {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-approve {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-reject {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        .text-muted-sm {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .registration-table thead th {
+                font-size: 0.7rem;
+            }
+
+            .registration-table tbody td {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+
+            .btn-sm-action {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
