@@ -1,7 +1,7 @@
 <?php
-
-require_once "includes/conn.php";
 session_start();
+require_once "includes/conn.php";
+
 
 if (isset($_POST['Login'])) {
 
@@ -17,10 +17,10 @@ if (isset($_POST['Login'])) {
             $_SESSION['user_name'] = $user['Name'];
             $_SESSION['user_role'] = $user['Role'];
             if ($user['Role'] == "admin") {
-                header("location:admin/admin.php");
+                header("Location:admin/admin.php");
                 exit();
             } else if ($user['Role'] == "teacher" ) {
-                header("location:../teacher.php");
+                header("Location:teacher/teacher.php");
 exit();
             } else if($user['Role'] == "student" ){
                  if ($user['Status'] == "Approved") {
@@ -34,14 +34,14 @@ exit();
 
             }
                    } else {
-            $_SESSION['error'] = "Invalid Password!";
-            header("Location: ../Login.php");
+            $_SESSION['error'] = "Invalid Email or Password!";
+            header("Location: Login.php");
             exit();
         }
 
     } else {
-        $_SESSION['error'] = "Invalid Email!";
-        header("Location: ../Login.php");
+        $_SESSION['error'] = "Invalid Email or Password!";
+        header("Location: Login.php");
         exit();
     }
 }
@@ -81,6 +81,17 @@ exit();
                     <div class="card-body p-sm-5">
                         <h2 class="fs-20 fw-bolder mb-4 text-center">Student Management System</h2>
                         <h4 class="fs-13 fw-bold mb-2 text-center">Login to your account</h4>
+                         <?php
+                       if( isset($_SESSION['error'])){
+                        echo "<div class='w-100 mt-4 pt-2 text-danger'>".$_SESSION['error']."</div>";
+                         unset($_SESSION['error']);
+                        }
+                        if( isset($_SESSION['success'])){
+                        echo "<div class='w-100 mt-4 pt-2 text-success'>".$_SESSION['success']."</div>";
+                         unset($_SESSION['success']);
+                        }
+                       
+                        ?>
                         <form action="" class="w-100 mt-4 pt-2" method="post">
                             <div class="mb-4">
                                 <input type="email" class="form-control" placeholder="Email "  name="Email" required>

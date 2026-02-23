@@ -2,14 +2,11 @@
 require_once "../includes/conn.php";
 
 session_start();
-if(empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
+if(empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher"){
 header("Location:../Login.php");
 exit();
 }
-
-
 ?>
-
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -29,9 +26,10 @@ exit();
     <link rel="stylesheet" href="../style.css">
 </head>
 
+
 <body>
    <?php
-   include "../includes/navbar/admin_navbar.php";
+   include "../includes/navbar/teacher_navbar.php";
    include "../includes/header.php";
 
    ?>
@@ -67,35 +65,41 @@ exit();
             </div>
           
         </div>
-       
+      
 
 
-        <div class="home-card-section container-fluid mt-4 ">
+
+
+<div class="home-card-section container-fluid mt-4 ">
     <div class="row g-4">
 
       
+        
+
+       
+
         <div class="col-lg-3 col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Total Students</h6>
-                        <h3 class="fw-bold mb-0"><?php echo $students ?? 0; ?></h3>
+                        <h6 class="text-muted mb-2">My Classes</h6>
+                      
                     </div>
-                    <div class="text-primary">
-                        <i class="feather-users fs-1"></i>
+                    <div class="text-warning">
+                        <i class="feather-book-open fs-1"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+         <div class="col-lg-3 col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Total Teachers</h6>
-                        <h3 class="fw-bold mb-0"><?php echo $teachers ?? 0; ?></h3>
+                        <h6 class="text-muted mb-2">My Students</h6>
+                      
                     </div>
-                    <div class="text-success">
+                    <div class="text-primary">
                         <i class="feather-user fs-1"></i>
                     </div>
                 </div>
@@ -106,22 +110,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Total Classes</h6>
-                        <h3 class="fw-bold mb-0"><?php echo $classes ?? 0; ?></h3>
-                    </div>
-                    <div class="text-warning">
-                        <i class="feather-book-open fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Pending Approvals</h6>
-                        <h3 class="fw-bold mb-0 text-danger"><?php echo $pending ?? 0; ?></h3>
+                        <h6 class="text-muted mb-2">New Annoucements</h6>
                     </div>
                     <div class="text-danger">
                         <i class="feather-clock fs-1"></i>
@@ -129,15 +118,33 @@ exit();
                 </div>
             </div>
         </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Pending Result Uploads</h6>
+                    </div>
+                   <div class="text-success">
+                        <i class="feather-award fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </div>
 </div>
-<br>
+
+<br>  
+
+        
+                
       <?php
       
       include "../includes/footer.php";
       ?>
     </main>
+
+
 
     <script src="../assets/vendors/js/vendors.min.js"></script>
     <script src="../assets/vendors/js/daterangepicker.min.js"></script>
