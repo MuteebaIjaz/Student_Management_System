@@ -47,8 +47,11 @@ if (isset($_POST['Save_Profile'])) {
         exit();
     }
     if (preg_match('/^03[0-9]{9}$/', $PhoneNo)) {
+
         $PhoneNo = substr($PhoneNo, 1);
     }
+    $PhoneNo = substr($PhoneNo, 1);
+}
     if (!preg_match('/^3[0-9]{9}$/', $PhoneNo)) {
         $_SESSION['error'] = "Enter valid mobile number (3XXXXXXXXX)";
         header("Location: Complete_profile.php");
@@ -56,6 +59,7 @@ if (isset($_POST['Save_Profile'])) {
     }
 
     $PhoneNo = '+92' . $PhoneNo;
+
     $checkquery = "SELECT * FROM students WHERE user_id = '$user_id'";
     $check = mysqli_query(
         $conn,
@@ -74,6 +78,12 @@ if (isset($_POST['Save_Profile'])) {
     if ($result) {
         $updateQuery = "UPDATE `users` SET `profile_status` = 1 WHERE user_id = $user_id";
         $updateResult = mysqli_query($conn, $updateQuery);
+    $query = "INSERT INTO `students` (`user_id`, `Roll_no`, `class_id`, `gender`, `dob`, `phone`, `address`, `Profile_Image`)
+          VALUES ('$user_id', '$RollNo', '$class_id', '$Gender', '$DOB', '$PhoneNo', '$Address', '$newFileName')";
+    $result = mysqli_query($conn, $query);
+    echo mysqli_error($conn);
+
+    if ($result) {
         header("Location:student/student.php");
         exit();
     } else {

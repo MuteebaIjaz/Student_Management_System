@@ -31,11 +31,15 @@
                                     class="feather-chevron-right"></i></span>
                         </a>
                         <ul class="nxl-submenu">
+<<<<<<< HEAD
                             <li class="nxl-item"><a class="nxl-link" href="add_teacher.php">Add Teachers</a></li>
                            
                         </ul>
                         <ul class="nxl-submenu">
                             <li class="nxl-item"><a class="nxl-link" href="view_teachers.php">All Teachers</a></li>
+=======
+                            <li class="nxl-item"><a class="nxl-link" href="apps-chat.html">Chat</a></li>
+>>>>>>> 07e9e85ccbc1bd3eb912d65fc7f3c242f3055ec7
                            
                         </ul>
                     </li>

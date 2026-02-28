@@ -20,14 +20,8 @@ if (isset($_POST['Login'])) {
                 header("Location:admin/admin.php");
                 exit();
             } else if ($user['Role'] == "teacher") {
-              if ($user['is_first_login'] == 1) {
-                        header("Location: change_password.php");
-                        exit();
-                    } else {
-                        header("Location: teacher/teacher.php");
-                        exit();
-                    }
-            
+                header("Location:teacher/teacher.php");
+                exit();
             } else if ($user['Role'] == "student") {
                 if ($user['Status'] == "Approved") {
                     if ($user['profile_status'] == 0) {
