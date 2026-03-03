@@ -5,9 +5,7 @@ if(!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
     header("location:../Login.php");
     exit();
 }
-if(isset($_GET['delete'])){
 
-}
 ?>
 
 <!DOCTYPE html>
@@ -89,7 +87,7 @@ if(isset($_GET['delete'])){
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $query = "SELECT * FROM `users` WHERE Role='teacher'";
+                                        $query = "SELECT * FROM `users` WHERE Role='students'";
                                         $result = mysqli_query($conn, $query);
                                         $count = 1;
                                         
@@ -104,9 +102,7 @@ if(isset($_GET['delete'])){
                                            
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a href="view_teachers.php?delete=<?php echo $data['user_id']?>" class="btn-sm-action btn-reject">Delete </a>
-                                                    <a href="view_teachers.php?edit=<?php echo $data['user_id']?>" class="btn-sm-action btn-primary">Edit</a>
-                                                
+                                                    <a href="../Controllers/adminController.php?approve=<?php echo $data['user_id']?>" class="btn-sm-action btn-approve">Assign Classes</a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -117,7 +113,7 @@ if(isset($_GET['delete'])){
                                         ?>
                                         <tr>
                                             <td colspan="5" class="text-center text-muted-sm">
-                                                <i class="feather-inbox"></i> No record found
+                                                <i class="feather-inbox"></i> No registration requests found
                                             </td>
                                         </tr>
                                         <?php

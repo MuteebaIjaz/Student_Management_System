@@ -96,13 +96,13 @@ $Name=$_POST['Name'];
         <div class="registration-container">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-12">
+                    <div class="col-md-12">
                         <div class="registration-table-card">
                             <div class="registration-table-header">
                                 <h4>Add Teacher:</h4>
                             </div>
                             
-                <div class="card mb-4 mt-5 mx-4 mx-sm-0 position-relative">
+                <div class="card mb-4  mx-4 mx-sm-0 position-relative">
 
                     <div class="card-body p-sm-5">
                        

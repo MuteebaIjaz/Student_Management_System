@@ -6,26 +6,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin") {
     exit();
 }
 if (isset($_POST['Add'])) {
-  
-    $subject = $_POST['subject'];
+    $className = $_POST['className'];
+    $Section = $_POST['Section'];
     // $teacher_id = $_POST['teacher_id'];
-    $select_query = "SELECT * FROM subject 
-                 WHERE subject_name = '$subject' 
-                ";
+    $select_query = "SELECT * FROM classes 
+                 WHERE class_name = '$className' 
+                 AND section = '$Section'";
     $select_result = mysqli_query($conn, $select_query);
 
     if (mysqli_num_rows($select_result) > 0) {
-        $_SESSION['error'] = "This subject already exists.";
-        header("Location:subjects.php");
+        $_SESSION['error'] = "This class and section already exists.";
+        header("Location:add_classes.php");
         exit();
     }
-    $query = "INSERT INTO `subject`
-    (`subject_name`) 
+    $query = "INSERT INTO `classes`
+    ( `class_name`, `section`) 
     VALUES
-     ('$subject')";
+     ('$className','$Section')";
     $result = mysqli_query($conn, $query);
     if ($result) {
-        header("Location: subjects.php");
+        header("Location: add_classes.php");
         exit();
     }
 
@@ -98,7 +98,7 @@ if (isset($_POST['Add'])) {
                     <div class="col-md-12">
                         <div class="registration-table-card">
                             <div class="registration-table-header">
-                                <h4>Add Subject:</h4>
+                                <h4>Add Class:</h4>
                             </div>
 
                             <div class="card mb-4  mx-4 mx-sm-0 position-relative">
@@ -108,10 +108,17 @@ if (isset($_POST['Add'])) {
 
                                     <form action="" class="w-50  pt-2" method="post">
                                         <div class="mb-4">
-                                            <input type="text" class="form-control" placeholder=" Subject Name"
-                                                name="subject" required>
+                                            <input type="text" class="form-control" placeholder=" Class Name"
+                                                name="className" required>
                                         </div>
-                                      
+                                        <div class="mb-4">
+                                            <select name="Section" class="form-control" required>
+                                                <option value="" disabled selected>Select Section</option>
+                                                <option value="A">A</option>
+                                                <option value="B">B</option>
+                                                <option value="C">C</option>
+                                            </select>
+                                        </div>
                                         <!-- <div class="mb-4">
                                             <select class="form-control" name="teacher_id" required>
                                                 <option value="" selected disabled>Assign Teacher</option>
