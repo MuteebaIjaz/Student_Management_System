@@ -56,9 +56,12 @@
                     </li>
                       <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
-                            <span class="nxl-mtext">Mark Attendance</span><span class="nxl-arrow"><i
+                            <span class="nxl-mtext">Attendance</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
+                           <ul class="nxl-submenu">
+                            <li class="nxl-item"><a class="nxl-link" href="../attendance/mark_attendance.php">Mark Attendance</a></li>
+                        </ul>
                       
                     </li>
  <li class="nxl-item nxl-hasmenu">
