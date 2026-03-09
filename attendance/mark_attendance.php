@@ -1,6 +1,7 @@
 <?php
 require_once "../includes/conn.php";
 session_start();
+date_default_timezone_set("Asia/Karachi");
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
     header("Location:../Login.php");
@@ -12,7 +13,7 @@ if (isset($_POST['save_attendance'])) {
     $class_id = $_POST['class_id'];
     $teacher_id = $_SESSION['user_id'];
     $subject_id = $_POST['subject_id'];
-    $date = date('Y-m-d');
+    $date = isset($_POST['attendance_date']) ? $_POST['attendance_date'] : date('Y-m-d');
 
     foreach ($_POST['status'] as $student_id => $status) {
         $check = mysqli_query(
@@ -121,7 +122,7 @@ if (isset($_POST['save_attendance'])) {
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label>Select Class</label>
-                                                <select name="class_id" class="form-control" required>
+                                                <select name="class_id" class="form-control" required onchange="this.form.submit()">
                                                     <option disabled selected>Select Class</option>
                                                     <?php
                                                     $teacher_id = $_SESSION['user_id'];
@@ -137,7 +138,7 @@ if (isset($_POST['save_attendance'])) {
                                                 </select>
                                             </div>
 
-                                            <div class="col-md-6 mb-3">
+                                            <div class="col-md-4 mb-3">
                                                 <label>Select Subject</label>
                                                 <select name="subject_id" class="form-control" required <?php echo isset($_GET['class_id']) ? "" : "disabled"; ?>>
                                                     <option disabled selected>Select Subject</option>
@@ -157,8 +158,18 @@ if (isset($_POST['save_attendance'])) {
                                                     ?>
                                                 </select>
                                             </div>
+                                            
+                                            <div class="col-md-4 mb-3">
+                                                <label>Attendance Date</label>
+                                                <?php
+                                                $selected_date = isset($_GET['attendance_date']) ? $_GET['attendance_date'] : date('Y-m-d');
+                                                ?>
+                                                <input type="date" name="attendance_date" class="form-control" 
+                                                       value="<?php echo ($selected_date); ?>" 
+                                                       max="<?php echo date('Y-m-d'); ?>" required>
+                                            </div>
                                         </div>
-                                        <button type="submit" class="btn btn-primary">Load Subjects</button>
+                                        <button type="submit" class="btn btn-primary">Load Students</button>
                                     </form>
 
                                     <?php
@@ -170,9 +181,12 @@ if (isset($_POST['save_attendance'])) {
                                         $students = mysqli_query($conn, "SELECT student_id, Roll_no FROM students WHERE class_id='$class_id' ORDER BY Roll_no ASC");
 
                                         if (mysqli_num_rows($students) > 0) {
+                                            $attendance_date = isset($_GET['attendance_date']) ? $_GET['attendance_date'] : date('Y-m-d');
+                                            
                                             echo '<form method="POST">';
                                             echo "<input type='hidden' name='class_id' value='$class_id'>";
                                             echo "<input type='hidden' name='subject_id' value='$subject_id'>";
+                                            echo "<input type='hidden' name='attendance_date' value='$attendance_date'>";
                                             echo '<div class="table-responsive">';
                                             echo '<table class="table table-bordered">';
                                             echo '<thead><tr><th>S.No</th><th>Roll Number</th><th>Present</th><th>Absent</th></tr></thead><tbody>';
@@ -195,7 +209,13 @@ if (isset($_POST['save_attendance'])) {
                                         }
                                     }
                                     ?>
-
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
 

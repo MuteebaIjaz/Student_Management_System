@@ -2,10 +2,12 @@
 require_once "../includes/conn.php";
 
 session_start();
-if(empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
+if(!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
 header("Location:../Login.php");
 exit();
 }
+
+
 
 
 ?>
