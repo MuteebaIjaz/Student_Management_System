@@ -35,6 +35,24 @@ if (isset($_POST['save_attendance'])) {
     header("Location:mark_attendance.php");
     exit();
 }
+
+if (isset($_POST['edit_attendance'])) {
+    $class_id = $_POST['class_id'];
+    $teacher_id = $_SESSION['user_id'];
+    $subject_id = $_POST['subject_id'];
+    $date = isset($_POST['attendance_date']) ? $_POST['attendance_date'] : date('Y-m-d');
+    foreach ($_POST['status'] as $student_id => $status) {
+        $update_query = "UPDATE `attendance` SET `status` = '$status' ,`teacher_id`= '$teacher_id' WHERE 
+`student_id` = '$student_id' AND `subject_id` = '$subject_id' AND `date` = '$date'
+";
+        $update_result = mysqli_query($conn, $update_query);
+       
+
+    }
+    $_SESSION['success'] = "Attendance updated successfully!";
+header("Location: mark_attendance.php");
+exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="zxx">
@@ -122,7 +140,8 @@ if (isset($_POST['save_attendance'])) {
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label>Select Class</label>
-                                                <select name="class_id" class="form-control" required onchange="this.form.submit()">
+                                                <select name="class_id" class="form-control" required
+                                                    onchange="this.form.submit()">
                                                     <option disabled selected>Select Class</option>
                                                     <?php
                                                     $teacher_id = $_SESSION['user_id'];
@@ -158,22 +177,21 @@ if (isset($_POST['save_attendance'])) {
                                                     ?>
                                                 </select>
                                             </div>
-                                            
+
                                             <div class="col-md-4 mb-3">
                                                 <label>Attendance Date</label>
                                                 <?php
                                                 $selected_date = isset($_GET['attendance_date']) ? $_GET['attendance_date'] : date('Y-m-d');
                                                 ?>
-                                                <input type="date" name="attendance_date" class="form-control" 
-                                                       value="<?php echo ($selected_date); ?>" 
-                                                       max="<?php echo date('Y-m-d'); ?>" required>
+                                                <input type="date" name="attendance_date" class="form-control"
+                                                    value="<?php echo ($selected_date); ?>"
+                                                    max="<?php echo date('Y-m-d'); ?>" required>
                                             </div>
                                         </div>
                                         <button type="submit" class="btn btn-primary">Load Students</button>
                                     </form>
 
                                     <?php
-
                                     if (isset($_GET['class_id']) && isset($_GET['subject_id'])) {
                                         $class_id = $_GET['class_id'];
                                         $subject_id = $_GET['subject_id'];
@@ -182,7 +200,10 @@ if (isset($_POST['save_attendance'])) {
 
                                         if (mysqli_num_rows($students) > 0) {
                                             $attendance_date = isset($_GET['attendance_date']) ? $_GET['attendance_date'] : date('Y-m-d');
-                                            
+
+                                            $check_existing = mysqli_query($conn, "SELECT * FROM attendance WHERE subject_id='$subject_id' AND date='$attendance_date' LIMIT 1");
+                                            $attendance_exists = (mysqli_num_rows($check_existing) > 0);
+
                                             echo '<form method="POST">';
                                             echo "<input type='hidden' name='class_id' value='$class_id'>";
                                             echo "<input type='hidden' name='subject_id' value='$subject_id'>";
@@ -193,16 +214,37 @@ if (isset($_POST['save_attendance'])) {
 
                                             $count = 1;
                                             while ($student = mysqli_fetch_assoc($students)) {
+                                                $student_id = $student['student_id'];
+                                                $present_checked = "";
+                                                $absent_checked = "";
+
+                                                if ($attendance_exists) {
+                                                    $status_query = mysqli_query($conn, "SELECT Status FROM attendance WHERE student_id='$student_id' AND subject_id='$subject_id' AND date='$attendance_date'");
+                                                    if (mysqli_num_rows($status_query) > 0) {
+                                                        $record = mysqli_fetch_assoc($status_query);
+                                                        if ($record['Status'] == 'Present')
+                                                            $present_checked = "checked";
+                                                        if ($record['Status'] == 'Absent')
+                                                            $absent_checked = "checked";
+                                                    }
+                                                }
+
                                                 echo '<tr>';
                                                 echo '<td>' . $count++ . '</td>';
                                                 echo '<td>' . $student['Roll_no'] . '</td>';
-                                                echo '<td><input type="radio" name="status[' . $student['student_id'] . ']" value="Present" required></td>';
-                                                echo '<td><input type="radio" name="status[' . $student['student_id'] . ']" value="Absent" required></td>';
+                                                echo '<td><input type="radio" name="status[' . $student_id . ']" value="Present" required ' . $present_checked . '></td>';
+                                                echo '<td><input type="radio" name="status[' . $student_id . ']" value="Absent" required ' . $absent_checked . '></td>';
                                                 echo '</tr>';
                                             }
 
                                             echo '</tbody></table></div>';
-                                            echo '<button type="submit" name="save_attendance" class="btn btn-success mt-3">Save Attendance</button>';
+
+                                            if ($attendance_exists) {
+                                                echo '<button type="submit" name="edit_attendance" class="btn btn-warning mt-3">Update Attendance</button>';
+                                            } else {
+                                                echo '<button type="submit" name="save_attendance" class="btn btn-success mt-3">Save Attendance</button>';
+                                            }
+
                                             echo '</form>';
                                         } else {
                                             echo '<div class="alert alert-info">No students found in this class.</div>';

@@ -81,7 +81,12 @@ exit();
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-2">Total Students</h6>
-                        <h3 class="fw-bold mb-0"><?php echo $students ?? 0; ?></h3>
+                        <h3 class="fw-bold mb-0"><?php 
+                        
+                        $students=mysqli_query($conn,"SELECT COUNT(*) as total FROM students");
+                        $data=mysqli_fetch_assoc($students);
+                        echo $data['total'];
+                        ?></h3>
                     </div>
                     <div class="text-primary">
                         <i class="feather-users fs-1"></i>
@@ -95,7 +100,11 @@ exit();
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-2">Total Teachers</h6>
-                        <h3 class="fw-bold mb-0"><?php echo $teachers ?? 0; ?></h3>
+                        <h3 class="fw-bold mb-0"><?php 
+                           $teachers=mysqli_query($conn,"SELECT COUNT(*) as total FROM users WHERE Role = 'teacher'");
+                        $data=mysqli_fetch_assoc($teachers);
+                        echo $data['total'];
+                        ?></h3>
                     </div>
                     <div class="text-success">
                         <i class="feather-user fs-1"></i>
@@ -109,7 +118,16 @@ exit();
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-2">Total Classes</h6>
-                        <h3 class="fw-bold mb-0"><?php echo $classes ?? 0; ?></h3>
+                        <h3 class="fw-bold mb-0">
+
+<?php 
+                           $classes=mysqli_query($conn,"SELECT COUNT(*) as total FROM classes");
+                        $data=mysqli_fetch_assoc($classes);
+                        echo $data['total'];
+                        
+                        ?>
+
+                        </h3>
                     </div>
                     <div class="text-warning">
                         <i class="feather-book-open fs-1"></i>
@@ -123,7 +141,12 @@ exit();
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-2">Pending Approvals</h6>
-                        <h3 class="fw-bold mb-0 text-danger"><?php echo $pending ?? 0; ?></h3>
+                        <h3 class="fw-bold mb-0 text-danger"><?php 
+                           $requests=mysqli_query($conn,"SELECT COUNT(*) as total FROM users WHERE Role = 'student' AND status = 'pending'");
+                        $data=mysqli_fetch_assoc($requests);
+                        echo $data['total'];
+                        
+                        ?></h3>
                     </div>
                     <div class="text-danger">
                         <i class="feather-clock fs-1"></i>
