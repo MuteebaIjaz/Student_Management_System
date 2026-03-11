@@ -3,7 +3,7 @@ require_once "../includes/conn.php";
 session_start();
 date_default_timezone_set("Asia/Karachi");
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== "admin")) {
     header("Location:../Login.php");
     exit();
 }
@@ -18,9 +18,9 @@ if (isset($_POST['save_attendance'])) {
     foreach ($_POST['status'] as $student_id => $status) {
         $check = mysqli_query(
             $conn,
-          "SELECT * FROM attendance WHERE class_id='$class_id'
-AND subject_id='$subject_id'
-AND date='$attendance_date'"
+            "SELECT * FROM attendance WHERE student_id='$student_id'
+             AND subject_id='$subject_id'
+             AND date='$date'"
         );
 
         if (mysqli_num_rows($check) == 0) {
@@ -75,7 +75,7 @@ exit();
 
 <body>
     <?php
-    include "../includes/navbar/teacher_navbar.php";
+    include "../includes/navbar/admin_navbar.php";
     include "../includes/header.php";
 
     ?>
@@ -143,11 +143,7 @@ exit();
                                                     onchange="this.form.submit()">
                                                     <option disabled selected>Select Class</option>
                                                     <?php
-                                                    $teacher_id = $_SESSION['user_id'];
-                                                    $classes = mysqli_query($conn, "SELECT DISTINCT c.class_id,c.class_name,c.section 
-                                                        FROM classes c 
-                                                        JOIN class_subject_teacher cst ON cst.class_id = c.class_id
-                                                        WHERE cst.teacher_id = '$teacher_id'");
+                                                    $classes = mysqli_query($conn, "SELECT class_id, class_name, section FROM classes");
                                                     while ($row = mysqli_fetch_assoc($classes)) {
                                                         $selected = (isset($_GET['class_id']) && $_GET['class_id'] == $row['class_id']) ? "selected" : "";
                                                         echo "<option value='{$row['class_id']}' $selected>{$row['class_name']} - {$row['section']}</option>";
@@ -163,11 +159,10 @@ exit();
                                                     <?php
                                                     if (isset($_GET['class_id'])) {
                                                         $class_id = $_GET['class_id'];
-                                                        $subjects = mysqli_query($conn, "SELECT s.subject_id,s.subject_name 
+                                                        $subjects = mysqli_query($conn, "SELECT DISTINCT s.subject_id, s.subject_name 
                                                              FROM subject s 
                                                              JOIN class_subject_teacher cst ON cst.subject_id = s.subject_id 
-                                                             WHERE cst.teacher_id = '$teacher_id' 
-                                                             AND cst.class_id = '$class_id'");
+                                                             WHERE cst.class_id = '$class_id'");
                                                         while ($row = mysqli_fetch_assoc($subjects)) {
                                                             $selected = (isset($_GET['subject_id']) && $_GET['subject_id'] == $row['subject_id']) ? "selected" : "";
                                                             echo "<option value='{$row['subject_id']}' $selected>{$row['subject_name']}</option>";
@@ -218,7 +213,7 @@ exit();
                                                 $absent_checked = "";
 
                                                 if ($attendance_exists) {
-                                                    $status_query = mysqli_query($conn, "SELECT status FROM attendance WHERE student_id='$student_id' AND subject_id='$subject_id' AND date='$attendance_date'");
+                                                    $status_query = mysqli_query($conn, "SELECT status AS Status FROM attendance WHERE student_id='$student_id' AND subject_id='$subject_id' AND date='$attendance_date'");
                                                     if (mysqli_num_rows($status_query) > 0) {
                                                         $record = mysqli_fetch_assoc($status_query);
                                                         if ($record['Status'] == 'Present')
