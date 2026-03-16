@@ -54,7 +54,7 @@ if (isset($_POST['Add'])) {
 
 <body>
     <?php
-    include "../includes/navbar/admin_navbar.php";
+    include "../includes/navbar/teacher_navbar.php";
     include "../includes/header.php";
 
     ?>

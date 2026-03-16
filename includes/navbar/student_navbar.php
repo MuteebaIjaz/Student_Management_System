@@ -11,21 +11,21 @@
                         <label>Navigation</label>
                     </li>
                     <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../student/student.php" class="nxl-link">
                             <span class="nxl-mtext">Home</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
                         
                     </li>
                     <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../student/profile.php" class="nxl-link">
                             <span class="nxl-mtext">My Profile</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
                       
                     </li>
                      <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../student/subjects.php" class="nxl-link">
                             <span class="nxl-mtext">My Subjects</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
@@ -46,14 +46,14 @@
                       
                     </li>
                      <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../student/announcements.php" class="nxl-link">
                             <span class="nxl-mtext">Annoucements</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
                       
                     </li>
  <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../change_password.php" class="nxl-link">
                             <span class="nxl-mtext">Change Password</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>

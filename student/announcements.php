@@ -68,57 +68,51 @@ exit();
       
 
 
-
-
-<div class="home-card-section container-fluid mt-4 ">
-    <div class="row g-4">
-
-      
-        
-
-       
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">My Classes</h6>
-                      
-                    </div>
-                    <div class="text-warning">
-                        <i class="feather-book-open fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2"><a href="announcements.php" class="text-muted ">New Annoucements</a></h6>
-                    </div>
-                    <div class="text-danger">
-                        <i class="feather-clock fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-          <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Latest Result GPA:</h6>
-                    </div>
-                   <div class="text-success">
-                        <i class="feather-award fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
+ 
+        <div class="registration-container">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="registration-table-card">
+                            <div class="registration-table-header">
+                                <h4>All Announcements:</h4>
+                            </div>
+                            <?php
+                            $user_id =$_SESSION['user_id'];
+                            $select_query="SELECT `class_id` FROM `students` WHERE `user_id` = '$user_id'";
+                            $select_result=mysqli_query($conn,$select_query);
+                            $student=mysqli_fetch_assoc($select_result);
+                           $count=1;
+                            $class_id=$student['class_id'];
+                            $query="SELECT * FROM `announcements` WHERE `target_audience` = '$class_id' ORDER BY  `created_at` DESC LIMIT 5";
+                            $result=mysqli_query($conn,$query);
+                            if(mysqli_num_rows($result) > 0){
+                                while($announcement = mysqli_fetch_assoc($result)){
+                                    ?>
+                                    <div class="card mt-3 mx-3" style="width: 25rem;">
+  <div class="card-body">
+    <h5 class="card-title"><?php echo $count++?>.<?php echo $announcement['title']?>
+</h5>
+  
+    <p class="card-text"><?php echo $announcement['message']?></p>
+      <small class="text-muted">
+            <i class="feather-calendar me-1"></i>
+            <?= date('F j, Y g:i A', strtotime($announcement['created_at'])) ?>
+        </small>
+  </div>
 </div>
+                                    <?php
+                                }
+                            }
+                            ?>
+                           
+                          
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
 <br>  
 

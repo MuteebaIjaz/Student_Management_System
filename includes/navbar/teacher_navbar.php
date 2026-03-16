@@ -13,7 +13,7 @@
                         <label>Navigation</label>
                     </li>
                     <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../teacher/teacher.php" class="nxl-link">
                             <span class="nxl-mtext">Home</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
@@ -41,7 +41,7 @@
                       
                     </li>
                      <li class="nxl-item nxl-hasmenu">
-                        <a href="../teacher/annoucements.php" class="nxl-link">
+                        <a href="../teacher/announcements.php" class="nxl-link">
                             <span class="nxl-mtext">Annoucements</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
