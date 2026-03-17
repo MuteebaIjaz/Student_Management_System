@@ -27,14 +27,14 @@
                       
                     </li>
                      <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../teacher/Students.php" class="nxl-link">
                             <span class="nxl-mtext">My Students</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
                       
                     </li>
                      <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../teacher/Classes.php" class="nxl-link">
                             <span class="nxl-mtext">My Classes</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
@@ -65,7 +65,7 @@
                       
                     </li>
  <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../teacher/change_password.php" class="nxl-link">
                             <span class="nxl-mtext">Change Password</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>
