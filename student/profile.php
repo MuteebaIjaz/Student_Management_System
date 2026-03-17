@@ -74,11 +74,11 @@ $student = mysqli_fetch_assoc($result);
 
         </div>
 
-        <div class="container justify-content-between" style="background-color: white;">
+        <div class="container mt-3 justify-content-between mb-3">
             <div class="row">
 
                 <div class="col-lg-12">
-                    <div class="profile-card fade-up mt-5">
+                    <div class="profile-card fade-up">
                         <div class="avatar-wrap">
                             <img src="../student_images/<?php echo $student['Profile_Image'] ?>" alt="Profile Picture">
                         </div>
