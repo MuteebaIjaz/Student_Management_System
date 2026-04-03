@@ -32,7 +32,7 @@
                       
                     </li>
                      <li class="nxl-item nxl-hasmenu">
-                        <a href="javascript:void(0);" class="nxl-link">
+                        <a href="../student/result.php" class="nxl-link">
                             <span class="nxl-mtext">My Results</span><span class="nxl-arrow"><i
                                     class="feather-chevron-right"></i></span>
                         </a>

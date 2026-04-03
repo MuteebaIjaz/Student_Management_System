@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
 }
 $teacher_id = $_SESSION['user_id'];
 
-$query="SELECT 
+$query = "SELECT 
     classes.class_name,
     classes.section,
     subject.subject_name,
@@ -19,8 +19,8 @@ JOIN subject ON subject.subject_id = class_subject_teacher.subject_id
 JOIN classes ON classes.class_id = class_subject_teacher.class_id
 WHERE class_subject_teacher.teacher_id=$teacher_id";
 
-$result=mysqli_query($conn, $query);
-$classes=mysqli_fetch_assoc($result);
+$result = mysqli_query($conn, $query);
+$classes = mysqli_fetch_assoc($result);
 ?>
 
 <!DOCTYPE html>
@@ -89,7 +89,7 @@ $classes=mysqli_fetch_assoc($result);
                             <div class="registration-table-header">
                                 <h4>My Classes:</h4>
                             </div>
-  <div class="table-responsive-wrapper">
+                            <div class="table-responsive-wrapper">
                                 <table class="table registration-table table-hover">
                                     <thead>
                                         <tr>
@@ -100,47 +100,47 @@ $classes=mysqli_fetch_assoc($result);
                                             <th scope="col">Subject Type</th>
 
 
-                                          
+
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-                                     $count=1;
-                                      if(mysqli_num_rows($result)>0){
-                                      while($class_row=mysqli_fetch_array($result)){
-                                            
-                                           
-                                        ?>
-                                        <tr>
-                                            <td><?php echo $count; ?></td>
-                                            <td><strong><?php  echo $class_row['class_name']; ?></strong></td>
-                                        <td><strong><?php echo $class_row['section']?></strong></td>
-                                        <td><strong><?php echo $class_row['subject_name']?></strong></td>
-                                        <td><strong>  <?php echo ucfirst($class_row['type']); ?></strong></td>
+                                        $count = 1;
+                                        if (mysqli_num_rows($result) > 0) {
+                                            while ($class_row = mysqli_fetch_array($result)) {
 
 
-                                          
-                                            <td>
-                                            
-                                            </td>
-                                        </tr>
-                                        <?php
+                                                ?>
+                                                <tr>
+                                                    <td><?php echo $count; ?></td>
+                                                    <td><strong><?php echo $class_row['class_name']; ?></strong></td>
+                                                    <td><strong><?php echo $class_row['section'] ?></strong></td>
+                                                    <td><strong><?php echo $class_row['subject_name'] ?></strong></td>
+                                                    <td><strong> <?php echo ucfirst($class_row['type']); ?></strong></td>
+
+
+
+                                                    <td>
+
+                                                    </td>
+                                                </tr>
+                                                <?php
                                                 $count++;
                                             }
-                                        }else {
-                                        ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted-sm">
-                                                 No Classes found
-                                            </td>
-                                        </tr>
-                                        <?php
+                                        } else {
+                                            ?>
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted-sm">
+                                                    No Classes found
+                                                </td>
+                                            </tr>
+                                            <?php
                                         }
                                         ?>
                                     </tbody>
                                 </table>
                             </div>
-                          
+
                         </div>
                     </div>
                 </div>
