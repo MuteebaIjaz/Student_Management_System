@@ -32,6 +32,7 @@ $student = mysqli_fetch_assoc($result);
     <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="student.css">
 </head>
 
 
@@ -74,71 +75,68 @@ $student = mysqli_fetch_assoc($result);
 
         </div>
 
-        <div class="container mt-3 justify-content-between mb-3">
-            <div class="row">
+            <!-- /page-header -->
 
-                <div class="col-lg-12">
-                    <div class="profile-card fade-up">
-                        <div class="avatar-wrap">
-                            <img src="../student_images/<?php echo $student['Profile_Image'] ?>" alt="Profile Picture">
+            <div class="page">
+                <div class="class-badge">
+                    <h1><b>My Profile</b></h1>
+                </div>
+
+                <div class="fade-up" style="padding: 20px 0; text-align: center;">
+                    <div class="avatar-wrap">
+                        <img src="../student_images/<?php echo $student['Profile_Image'] ?>" alt="Profile Picture">
+                    </div>
+
+                    <div class="mt-3">
+                        <h1 style="font-size: 28px; font-weight: 600; color: #333; margin-top: 10px;"><?php echo $student['Name'] ?></h1>
+                        <span class="profile-role">Student</span>
+
+                        <div class="stat-pills" style="justify-content: center;">
+                            <div class="stat-pill">Class: <span><?php echo $student['class_id'] ?></span></div>
+                            <div class="stat-pill">Roll No: <span><?php echo $student['Roll_no'] ?></span></div>
                         </div>
+                    </div>
 
-                        <div class="d-flex justify-content-between align-items-end mt-3">
-                            <div>
-                                <h1><?php echo $student['Name'] ?></h1>
-                                <span class="profile-role">Student</span>
-
-                                <div class="stat-pills">
-                                    <div class="stat-pill">Class: <span><?php echo $student['class_id'] ?></span></div>
-                                    <div class="stat-pill">Roll No: <span><?php echo $student['Roll_no'] ?></span></div>
-                                </div>
+                    <div class="mt-5 fade-up" style="text-align: left;">
+                        <h5 style="margin-bottom: 20px; font-weight: 600; color: #333;">Personal Information</h5>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-icon text-primary"><i class="feather-mail"></i></div>
+                                <div class="info-label">Email Address</div>
+                                <div class="info-value"><?php echo $student['Email'] ?></div>
                             </div>
-
-                        </div>
-
-                        <div class="mt-5 fade-up">
-                            <h5>Personal Information</h5>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <div class="info-icon text-primary"><i class="feather-mail"></i></div>
-                                    <div class="info-label">Email Address</div>
-                                    <div class="info-value"><?php echo $student['Email'] ?></div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon text-success"><i class="feather-phone"></i></div>
-                                    <div class="info-label">Phone Number</div>
-                                    <div class="info-value"><?php echo $student['phone'] ?></div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon text-warning"><i class="feather-calendar"></i></div>
-                                    <div class="info-label">Date of Birth</div>
-                                    <div class="info-value"><?php echo $student['dob'] ?></div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon text-info"><i class="feather-user"></i></div>
-                                    <div class="info-label">Gender</div>
-                                    <div class="info-value"><?php echo $student['gender'] ?></div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon text-danger"><i class="feather-map-pin"></i></div>
-                                    <div class="info-label">Address</div>
-                                    <div class="info-value"><?php echo $student['address'] ?></div>
-                                </div>
-
+                            <div class="info-item">
+                                <div class="info-icon text-success"><i class="feather-phone"></i></div>
+                                <div class="info-label">Phone Number</div>
+                                <div class="info-value"><?php echo $student['phone'] ?></div>
                             </div>
-
+                            <div class="info-item">
+                                <div class="info-icon text-warning"><i class="feather-calendar"></i></div>
+                                <div class="info-label">Date of Birth</div>
+                                <div class="info-value"><?php echo $student['dob'] ?></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon text-info"><i class="feather-user"></i></div>
+                                <div class="info-label">Gender</div>
+                                <div class="info-value"><?php echo $student['gender'] ?></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon text-danger"><i class="feather-map-pin"></i></div>
+                                <div class="info-label">Address</div>
+                                <div class="info-value"><?php echo $student['address'] ?></div>
+                            </div>
                         </div>
-                        <div class="w-25 mt-3">
-                            <a href="" class="btn btn-primary">
-                                <i class="feather-edit"></i> Edit Profile
-                            </a>
-                        </div>
+                    </div>
+                    
+                    <div class="mt-4" style="text-align: left;">
+                        <a href="profile_edit.php" class="btn btn-primary">
+                            <i class="feather-edit"></i> Edit Profile
+                        </a>
                     </div>
                 </div>
 
-            </div>
-
-        </div>
+            </div><!-- /.page -->
+        </div><!-- /.nxl-content -->
 
 
 

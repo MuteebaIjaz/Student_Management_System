@@ -82,7 +82,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">My Classes</h6>
+                        <h6 class="text-muted mb-2"><a href="subjects.php" class="text-muted ">My Subjects</a></h6>
                       
                     </div>
                     <div class="text-warning">
@@ -108,7 +108,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Latest Result GPA:</h6>
+                        <h6 class="text-muted mb-2"><a href="result.php" class="text-muted ">Latest Result GPA:</a></h6>
                     </div>
                    <div class="text-success">
                         <i class="feather-award fs-1"></i>

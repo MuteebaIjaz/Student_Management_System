@@ -34,6 +34,7 @@ $result = mysqli_query($conn, $query);
     <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="student.css">
 </head>
 
 <body>
@@ -73,75 +74,73 @@ $result = mysqli_query($conn, $query);
                 </div>
             </div>
 
-        </div>
+            <!-- /page-header -->
 
-        <div class="container mt-3 mb-3 bg-white">
+            <div class="page">
+                <div class="class-badge">
+                    <h1><b>My Subjects</b></h1>
+                </div>
 
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="subject-card">
-                        <?php
-                        $class_query = "SELECT * FROM classes WHERE class_id='$class_id'";
-                        $class_result = mysqli_query($conn, $class_query);
-                        $class = mysqli_fetch_assoc($class_result);
-                        ?>
-                        <div class="class-badge">
-                            <h1><b>My Subjects</b></h1>
+                <!-- ── Page header row ──────────────────────────── -->
+                <?php
+                $class_query = "SELECT * FROM classes WHERE class_id='$class_id'";
+                $class_result = mysqli_query($conn, $class_query);
+                $class = mysqli_fetch_assoc($class_result);
+                $total_subjects = mysqli_num_rows($result);
+                ?>
+                <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
+                    <div>
+                        <div class="class-chip">
+                            <span class="chip-dot"></span>
+                            <?php echo htmlspecialchars($class['class_name'] . ' — ' . $class['section']); ?>
                         </div>
-                        <div class="subjects-grid">
-                            <?php
-                            while ($subjects = mysqli_fetch_assoc($result)) {
-                                $words = explode(' ', $subjects['teacher_name']);
-                                $initials = strtoupper($words[0][0] . (isset($words[1]) ? $words[1][0] : ''));
-
-                                ?>
-                                <!-- Mathematics -->
-                                <div class="subject-card">
-                                    <div class="card-top">
-                                        <div class="subject-icon" style="background:#E6F1FB;color:#0C447C;">
-                                            <?php echo $subjects['subject_name'][0]; ?></div>
-                                        <span class="tag core"><?php echo ucfirst($subjects['type']) ?></span>
-                                    </div>
-                                    <div class="subject-name"><?php echo $subjects['subject_name']; ?></div>
-                                    <div class="subject-code"><?php echo $subjects['code'] ?></div>
-                                    <div class="teacher-row">
-                                        <div class="avatar" style="background:#B5D4F4;color:#0C447C;">
-                                            <?php echo $initials; ?></div>
-                                        Teacher:<span class="teacher-name"><?php echo $subjects['teacher_name'] ?></span>
-                                    </div>
-                                    <hr class="divider">
-                                    <!-- <div class="metrics-row">
-        <div class="metric">
-          <div class="metric-label">Attendance</div>
-          <div class="metric-value" style="color:#1D9E75;">88%</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:88%;background:#1D9E75;"></div></div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Latest grade</div>
-          <div class="metric-value" style="color:#BA7517;">79%</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:79%;background:#BA7517;"></div></div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="pending"><span class="pending-dot"></span>1 task pending</span>
-        <button class="view-btn">View details</button>
-      </div> -->
-                                </div>
-
-
-
-
-                                <?php
-                            }
-                            ?>
-                        </div>
+                        <p class="page-sub">
+                            <?php echo $total_subjects; ?> subject<?php echo $total_subjects !== 1 ? 's' : ''; ?> assigned
+                        </p>
                     </div>
                 </div>
 
+                <div class="subjects-grid">
+                    <?php
+                    while ($subjects = mysqli_fetch_assoc($result)) {
+                        $words = explode(' ', $subjects['teacher_name']);
+                        $initials = strtoupper($words[0][0] . (isset($words[1]) ? $words[1][0] : ''));
+                        $type = $subjects['type'];
+                        $type_bg  = $type === 'core' ? '#e6f5ee' : '#eeebfb';
+                        $type_col = $type === 'core' ? '#1a7a56' : '#4a2fa0';
+                        $icon_bg  = $type === 'core' ? '#e6eff9' : '#eeebfb';
+                        $icon_col = $type === 'core' ? '#1a4f8a' : '#4a2fa0';
+                    ?>
+                        <div class="result-card">
+                            <div class="card-top">
+                                <div class="subj-icon" style="background:<?php echo $icon_bg; ?>;color:<?php echo $icon_col; ?>;">
+                                    <?php echo $subjects['subject_name'][0]; ?>
+                                </div>
+                            </div>
+                            
+                            <div class="subj-name"><?php echo htmlspecialchars($subjects['subject_name']); ?></div>
+                            <div class="subj-meta">
+                                <?php echo htmlspecialchars($subjects['code']); ?>
+                                <span class="type-tag" style="background:<?php echo $type_bg; ?>;color:<?php echo $type_col; ?>;">
+                                    <?php echo ucfirst(htmlspecialchars($type)); ?>
+                                </span>
+                            </div>
 
-            </div>
-        </div>
-        </div>
+                            <hr class="card-divider">
+
+                            <div class="teacher-row" style="margin-bottom:0;">
+                                <div class="t-avatar"><?php echo $initials; ?></div>
+                                <span class="t-name">
+                                    Teacher: <?php echo htmlspecialchars($subjects['teacher_name']); ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php
+                    }
+                    ?>
+                </div>
+            </div><!-- /.page -->
+        </div><!-- /.nxl-content -->
 
 
 
