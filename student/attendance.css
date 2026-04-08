@@ -1,7 +1,6 @@
 
 
 
-/* ── CSS Variables ───────────────────────── */
 :root {
   --blue-900: #0C2340;
   --blue-700: #0C447C;
@@ -34,14 +33,12 @@
   --transition: all .22s cubic-bezier(.4,0,.2,1);
 }
 
-/* ── Base Reset for Attendance Block ─────── */
 .attendance-section *,
 .attendance-section *::before,
 .attendance-section *::after {
   box-sizing: border-box;
 }
 
-/* ── Wrapper ─────────────────────────────── */
 .attendance-section {
   font-family: 'DM Sans', sans-serif;
   color: var(--text-main);
@@ -57,7 +54,6 @@
   to   { opacity:1; transform:translateY(0); }
 }
 
-/* ── Header ──────────────────────────────── */
 .attendance-header {
 background-color:#667eea;
     padding: 20px;
@@ -84,7 +80,7 @@ background-color:#667eea;
   z-index: 1;
 }
 
-/* ── Body ────────────────────────────────── */
+
 .attendance-body {
   padding: 28px 32px 36px;
 }
@@ -142,7 +138,7 @@ background-color:#667eea;
   border: 1px solid var(--border);
 }
 
-/* ── Middle — Cards ──────────────────────── */
+
 .attendance-middle {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -150,7 +146,7 @@ background-color:#667eea;
   margin-bottom: 34px;
 }
 
-/* ── Individual Attendance Card ──────────── */
+
 .attendance-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -199,14 +195,12 @@ background-color:#667eea;
   opacity: 1;
 }
 
-/* Card top row */
 .card-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
 
-/* Subject icon circle */
 .attendance-icon {
   width: 42px;
   height: 42px;
@@ -222,7 +216,7 @@ background-color:#667eea;
   flex-shrink: 0;
 }
 
-/* Subject tag (Core / Elective) */
+
 .tag {
   font-size: .7rem;
   font-weight: 600;
@@ -242,7 +236,7 @@ background-color:#667eea;
   color: var(--amber-500);
 }
 
-/* Subject name */
+
 .subject-name {
   font-size: 1.05rem;
   font-weight: 600;
@@ -250,7 +244,7 @@ background-color:#667eea;
   line-height: 1.3;
 }
 
-/* Teacher row */
+
 .teacher-row {
   display: flex;
   align-items: center;
@@ -279,7 +273,6 @@ background-color:#667eea;
   font-weight: 600;
 }
 
-/* Attendance count */
 .class-attended {
   font-size: .82rem;
   color: var(--text-muted);
@@ -288,7 +281,6 @@ background-color:#667eea;
 
 
 
-/* Status badge */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -331,7 +323,6 @@ background-color:#667eea;
   font-weight: 700;
 }
 
-/* ── Bottom Table ─────────────────────────── */
 .attendance-bottom {
   animation: fadeUp .4s .2s ease both;
 }
@@ -393,7 +384,6 @@ background-color:#667eea;
   color: var(--blue-700);
 }
 
-/* Inline status pill in table */
 .attendance-bottom .table tbody td .pill {
   display: inline-block;
   padding: 3px 12px;
@@ -406,7 +396,6 @@ background-color:#667eea;
 .pill.absent   { background: var(--red-100);   color: var(--red-500);   }
 .pill.low-att  { background: var(--amber-100); color: var(--amber-500); }
 
-/* Striped rows */
 .attendance-bottom .table tbody tr:nth-child(even) {
   background: #F9FBFE;
 }
