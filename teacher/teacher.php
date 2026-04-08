@@ -82,7 +82,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">My Classes</h6>
+                        <h6 class="text-muted mb-2"><a href="Classes.php">My Classes</a></h6>
                       
                     </div>
                     <div class="text-warning">
@@ -96,7 +96,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">My Students</h6>
+                        <h6 class="text-muted mb-2"><a href="Students.php">My Students</a></h6>
                       
                     </div>
                     <div class="text-primary">
@@ -110,7 +110,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">New Annoucements</h6>
+                        <h6 class="text-muted mb-2"><a href="annoucements.php">New Annoucements</a></h6>
                     </div>
                     <div class="text-danger">
                         <i class="feather-clock fs-1"></i>
@@ -122,7 +122,7 @@ exit();
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Pending Result Uploads</h6>
+                        <h6 class="text-muted mb-2"><a href="result.php">Pending Result Uploads</a></h6>
                     </div>
                    <div class="text-success">
                         <i class="feather-award fs-1"></i>

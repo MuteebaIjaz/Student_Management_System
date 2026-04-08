@@ -14,10 +14,10 @@ exit();
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Dashboard</title>
+    <meta name="description" content="Student Dashboard for the Student Management System. Access subjects, announcements, and results." />
+    <meta name="keywords" content="Student Management System, SMS, Student Dashboard, Subjects, Announcements, Results" />
+    <meta name="author" content="Student Management System" />
+    <title>Student Dashboard | Student Management System</title>
     <link rel="shortcut icon" type="image/x-icon" href="../assets/images/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />

@@ -11,7 +11,7 @@ if(!empty($student_Image['Profile_Image'])){
     $Profile_Picture="../student_images/".$student_Image['Profile_Image'];
  }
 }else{
-$Profile_Picture="../student_images/user_image_Default.png";
+$Profile_Picture="../student_images/user_image_default.png";
  }
  ?>
 

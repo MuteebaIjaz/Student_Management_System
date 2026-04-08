@@ -46,7 +46,11 @@ $overall_color = $total_percentage >= 75 ? '#1D9E75' : ($total_percentage >= 65 
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Attendance Page for the Student Management System. Track attendance for each subject." />
+    <meta name="keywords" content="Student Management System, SMS, Attendance, Subject Attendance, Attendance Records" />
+    <meta name="author" content="Student Management System" />
+    <title>Attendance | Student Management System</title>
     <link rel="shortcut icon" type="image/x-icon" href="../assets/images/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
