@@ -52,6 +52,14 @@
                         </a>
                       
                     </li>
+                     <li class="nxl-item nxl-hasmenu">
+                        <a href="../student/fee.php" class="nxl-link">
+                            <span class="nxl-mtext">Fee</span><span class="nxl-arrow"><i
+                                    class="feather-chevron-right"></i></span>
+                        </a>
+                         
+                      
+                    </li>
  <li class="nxl-item nxl-hasmenu">
                         <a href="../change_password.php" class="nxl-link">
                             <span class="nxl-mtext">Change Password</span><span class="nxl-arrow"><i

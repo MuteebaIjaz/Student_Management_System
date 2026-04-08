@@ -62,6 +62,8 @@
                          
                       
                     </li>
+                   
+
  <li class="nxl-item nxl-hasmenu">
                         <a href="../teacher/change_password.php" class="nxl-link">
                             <span class="nxl-mtext">Change Password</span><span class="nxl-arrow"><i

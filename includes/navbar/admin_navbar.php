@@ -78,6 +78,19 @@
 
 
                 </li>
+                <li class="nxl-item nxl-hasmenu">
+                    <a href="javascript:void(0);" class="nxl-link">
+                        <span class="nxl-mtext">Fee</span><span class="nxl-arrow"><i
+                                class="feather-chevron-right"></i></span>
+                    </a>
+
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item"><a class="nxl-link" href="fee_type.php">Fee Type</a></li>
+                    </ul>
+                    <ul class="nxl-submenu">
+                        <li class="nxl-item"><a class="nxl-link" href="record_payment.php">Record Payment</a></li>
+                    </ul>
+                </li>
             </ul>
 
         </div>
