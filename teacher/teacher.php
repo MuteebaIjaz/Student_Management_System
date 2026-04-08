@@ -2,9 +2,9 @@
 require_once "../includes/conn.php";
 
 session_start();
-if(empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher"){
-header("Location:../Login.php");
-exit();
+if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
+    header("Location:../Login.php");
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -28,12 +28,12 @@ exit();
 
 
 <body>
-   <?php
-   include "../includes/navbar/teacher_navbar.php";
-   include "../includes/header.php";
+     <?php
+     include "../includes/navbar/teacher_navbar.php";
+     include "../includes/header.php";
 
-   ?>
-   
+     ?>
+
     <main class="nxl-container">
         <div class="nxl-content">
             <div class="page-header">
@@ -63,85 +63,87 @@ exit();
                     </div>
                 </div>
             </div>
-          
+
         </div>
-      
 
 
 
 
-<div class="home-card-section container-fluid mt-4 ">
-    <div class="row g-4">
 
-      
-        
+        <div class="home-card-section container-fluid mt-4 ">
+            <div class="row g-4">
 
-       
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">My Classes</h6>
-                      
-                    </div>
-                    <div class="text-warning">
-                        <i class="feather-book-open fs-1"></i>
+
+
+
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">My Classes</h6>
+
+                            </div>
+                            <div class="text-warning">
+                                <i class="feather-book-open fs-1"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">
+                                    <a href="Students.php">My Students</a>
+                                </h6>
+
+                            </div>
+                            <div class="text-primary">
+                                <i class="feather-user fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">New Annoucements</h6>
+                            </div>
+                            <div class="text-danger">
+                                <i class="feather-clock fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Pending Result Uploads</h6>
+                            </div>
+                            <div class="text-success">
+                                <i class="feather-award fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-         <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">My Students</h6>
-                      
-                    </div>
-                    <div class="text-primary">
-                        <i class="feather-user fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <br>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">New Annoucements</h6>
-                    </div>
-                    <div class="text-danger">
-                        <i class="feather-clock fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-          <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Pending Result Uploads</h6>
-                    </div>
-                   <div class="text-success">
-                        <i class="feather-award fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-    </div>
-</div>
 
-<br>  
+        <?php
 
-        
-                
-      <?php
-      
-      include "../includes/footer.php";
-      ?>
+        include "../includes/footer.php";
+        ?>
     </main>
 
 

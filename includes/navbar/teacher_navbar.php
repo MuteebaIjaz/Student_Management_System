@@ -1,9 +1,9 @@
  <nav class="nxl-navigation">
         <div class="navbar-wrapper">
             <div class="m-header">
-                             <h4>Student 
+                             <h5>Student 
                                 <span style="color:blue">Management</span>
-                                 System</h4>    
+                                 System</h5>    
 
 
             </div>
