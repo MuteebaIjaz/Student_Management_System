@@ -64,14 +64,12 @@ exit();
                 </div>
             </div>
           
-            <!-- /page-header -->
 
             <div class="page">
                 <div class="class-badge">
                     <h1><b>Announcements</b></h1>
                 </div>
 
-                <!-- ── Page header row ──────────────────────────── -->
                 <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
                     <div>
                         <div class="class-chip">
@@ -147,8 +145,8 @@ exit();
                     ?>
                 </div>
 
-            </div><!-- /.page -->
-        </div><!-- /.nxl-content -->
+            </div>
+        </div>
 
         <br>  
 

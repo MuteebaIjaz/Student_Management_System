@@ -74,14 +74,12 @@ $result = mysqli_query($conn, $query);
                 </div>
             </div>
 
-            <!-- /page-header -->
 
             <div class="page">
                 <div class="class-badge">
                     <h1><b>My Subjects</b></h1>
                 </div>
 
-                <!-- ── Page header row ──────────────────────────── -->
                 <?php
                 $class_query = "SELECT * FROM classes WHERE class_id='$class_id'";
                 $class_result = mysqli_query($conn, $class_query);
@@ -92,7 +90,7 @@ $result = mysqli_query($conn, $query);
                     <div>
                         <div class="class-chip">
                             <span class="chip-dot"></span>
-                            <?php echo htmlspecialchars($class['class_name'] . ' — ' . $class['section']); ?>
+                            <?php echo ($class['class_name'] . ' — ' . $class['section']); ?>
                         </div>
                         <p class="page-sub">
                             <?php echo $total_subjects; ?> subject<?php echo $total_subjects !== 1 ? 's' : ''; ?> assigned
@@ -118,11 +116,11 @@ $result = mysqli_query($conn, $query);
                                 </div>
                             </div>
                             
-                            <div class="subj-name"><?php echo htmlspecialchars($subjects['subject_name']); ?></div>
+                            <div class="subj-name"><?php echo ($subjects['subject_name']); ?></div>
                             <div class="subj-meta">
-                                <?php echo htmlspecialchars($subjects['code']); ?>
+                                <?php echo ($subjects['code']); ?>
                                 <span class="type-tag" style="background:<?php echo $type_bg; ?>;color:<?php echo $type_col; ?>;">
-                                    <?php echo ucfirst(htmlspecialchars($type)); ?>
+                                    <?php echo ucfirst(($type)); ?>
                                 </span>
                             </div>
 
@@ -131,7 +129,7 @@ $result = mysqli_query($conn, $query);
                             <div class="teacher-row" style="margin-bottom:0;">
                                 <div class="t-avatar"><?php echo $initials; ?></div>
                                 <span class="t-name">
-                                    Teacher: <?php echo htmlspecialchars($subjects['teacher_name']); ?>
+                                    Teacher: <?php echo ($subjects['teacher_name']); ?>
                                 </span>
                             </div>
                         </div>
@@ -139,8 +137,7 @@ $result = mysqli_query($conn, $query);
                     }
                     ?>
                 </div>
-            </div><!-- /.page -->
-        </div><!-- /.nxl-content -->
+            </div></div>
 
 
 

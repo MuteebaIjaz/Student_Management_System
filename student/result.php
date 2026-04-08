@@ -122,7 +122,6 @@ include "../includes/header.php";
                     </div>
                 </div>
             </div>
-            <!-- /page-header -->
             
             <div class="page">
  
@@ -130,7 +129,6 @@ include "../includes/header.php";
                 <h1 ><b>My Result</b></h1>
             </div>
             
-            <!-- ── Page header row ──────────────────────────── -->
             <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
                 <div>
                     <div class="class-chip">
@@ -145,7 +143,6 @@ include "../includes/header.php";
                 </div>
              
             </div>
-                          <!-- ── Summary cards ────────────────────────────── -->
             <div class="summary-grid">
                 <div class="stat-card">
                     <div class="stat-label">Overall %</div>
@@ -169,7 +166,6 @@ include "../includes/header.php";
                 </div>
             </div>
  
-            <!-- ── Subject breakdown ────────────────────────── -->
             <?php if (empty($by_subject)): ?>
                 <div class="empty-state">
                     <div class="empty-icon">📋</div>
@@ -219,17 +215,17 @@ include "../includes/header.php";
                             </span>
                         </div>
  
-                        <div class="subj-name"><?php echo htmlspecialchars($subject_name); ?></div>
+                        <div class="subj-name"><?php echo ($subject_name); ?></div>
                         <div class="subj-meta">
-                            <?php echo htmlspecialchars($exams[0]['code']); ?>
+                            <?php echo ($exams[0]['code']); ?>
                             <span class="type-tag" style="background:<?php echo $type_bg; ?>;color:<?php echo $type_col; ?>;">
-                                <?php echo ucfirst(htmlspecialchars($type)); ?>
+                                <?php echo ucfirst(($type)); ?>
                             </span>
                         </div>
  
                         <div class="teacher-row">
-                            <div class="t-avatar"><?php echo htmlspecialchars($t_init); ?></div>
-                            <span class="t-name"><?php echo htmlspecialchars($teacher); ?></span>
+                            <div class="t-avatar"><?php echo ($t_init); ?></div>
+                            <span class="t-name"><?php echo ($teacher); ?></span>
                         </div>
  
                         <hr class="card-divider">
@@ -243,7 +239,6 @@ include "../includes/header.php";
                                 style="width:<?php echo $sub_pct; ?>%;background:<?php echo $sub_color; ?>;"></div>
                         </div>
  
-                        <!-- Individual exam rows -->
                         <?php if (!empty($exams)): ?>
                         <div class="exam-list">
                             <?php foreach ($exams as $exam):
@@ -251,7 +246,7 @@ include "../includes/header.php";
                             ?>
                             <div class="exam-row">
                                 <div>
-                                    <span class="exam-name"><?php echo htmlspecialchars($exam['exam_type']); ?></span>
+                                    <span class="exam-name"><?php echo ($exam['exam_type']); ?></span>
                                     <span class="exam-date">&middot; <?php echo date('d M Y', strtotime($exam['date'])); ?></span>
                                 </div>
                                 <div class="exam-score-wrap">
@@ -268,9 +263,7 @@ include "../includes/header.php";
                     </div>
                     <?php endforeach; ?>
  
-                </div><!-- /.subjects-grid -->
- 
-                <!-- ── Full results table ──────────────────── -->
+                </div>
                 <div class="table-section">
                     <div class="section-label">All results</div>
                     <div class="table-wrap">
@@ -310,7 +303,6 @@ include "../includes/header.php";
                                 <?php endforeach; ?>
                             </tbody>
  
-                            <!-- ── Footer totals row ─────── -->
                             <tfoot>
                                 <tr style="background:var(--surface2);">
                                     <td colspan="4" style="font-weight:600;color:var(--ink);padding:11px 16px;">
@@ -334,11 +326,11 @@ include "../includes/header.php";
                             </tfoot>
                         </table>
                     </div>
-                </div><!-- /.table-section -->
+                </div>
  
-            <?php endif; /* end empty check */ ?>
-            </div><!-- /.page -->
-        </div><!-- /.nxl-content -->
+            <?php endif; ?>
+            </div>
+        </div>
 
 
 
