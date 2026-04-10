@@ -28,11 +28,11 @@ if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
 
 
 <body>
-     <?php
-     include "../includes/navbar/teacher_navbar.php";
-     include "../includes/header.php";
+    <?php
+    include "../includes/navbar/teacher_navbar.php";
+    include "../includes/header.php";
 
-     ?>
+    ?>
 
     <main class="nxl-container">
         <div class="nxl-content">
@@ -74,7 +74,6 @@ if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
             <div class="row g-4">
 
 
-<<<<<<< HEAD
 
 
 
@@ -90,17 +89,6 @@ if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
                                 <i class="feather-book-open fs-1"></i>
                             </div>
                         </div>
-=======
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2"><a href="Classes.php">My Classes</a></h6>
-                      
-                    </div>
-                    <div class="text-warning">
-                        <i class="feather-book-open fs-1"></i>
->>>>>>> f574924799af43f062b3888e2829df8feb9439bc
                     </div>
                 </div>
 
@@ -148,49 +136,8 @@ if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
             </div>
         </div>
 
-<<<<<<< HEAD
         <br>
 
-=======
-         <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2"><a href="Students.php">My Students</a></h6>
-                      
-                    </div>
-                    <div class="text-primary">
-                        <i class="feather-user fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2"><a href="annoucements.php">New Annoucements</a></h6>
-                    </div>
-                    <div class="text-danger">
-                        <i class="feather-clock fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-          <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2"><a href="result.php">Pending Result Uploads</a></h6>
-                    </div>
-                   <div class="text-success">
-                        <i class="feather-award fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
->>>>>>> f574924799af43f062b3888e2829df8feb9439bc
 
 
         <?php

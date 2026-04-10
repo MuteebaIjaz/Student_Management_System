@@ -1,53 +1,50 @@
 # Student Management System (SMS)
 
-A dynamic, web-based Student Management System designed to streamline and automate day-to-day educational operations. Built with a robust PHP backend and an intuitive, modern frontend, this application provides distinct, secure, and fully-featured portals for Administrators, Teachers, and Students.
-The dashboard UI is based on a design created by [maryinparis].
-I modified and extended the original design to fit this project's requirements.
+A web-based School Management System with separate, secure portals for Administrators, Teachers, and Students — built to automate academic operations including attendance, results, fee tracking, and announcements.
 
-Original Source: [Duralux - PHP Admin & Dashboard Bootstrap Template](https://themeforest.net/item/duralux-php-admin-dashboard-template/55822753)
+## 📸 Screenshots
+| Admin Dashboard | Student Portal | Teacher Portal |
+|---|---|---|
+| ![admin](assets/images/AdminDashboard-Home.png) | ![student](assets/images/StudentDashboard-Home.png) | ![teacher](assets/images/TeacherDashboard-Home.png) |
 
 ## 🚀 Key Features
 
 ### 👑 Administrator Portal
-* **User Management:** Complete registration, approval, and profile management for staff and students.
-* **Academic Organization:** Manage classes, sections, subjects, and assign teachers.
-* **Fee Management:** Create fee types, issue dues, record incoming payments, and securely track the financial standing of students.
-* **Announcements:** Broadcast important updates institution-wide or restricted to specific classes.
+- User registration, approval, and profile management
+- Manage classes, sections, subjects, and teacher assignments
+- Fee management: create types, issue dues, record payments
+- Institution-wide announcements
 
 ### 👩‍🏫 Teacher Portal
-* **Attendance Tracking:** Easily capture and log daily student attendance for assigned classes.
-* **Results & Grading:** Secure interface to enter exam marks, compute totals, and submit student performance.
-* **Class Overview:** Monitor student rosters and track overall academic progress seamlessly.
+- Daily attendance tracking for assigned classes
+- Enter exam marks and submit student results
+- Monitor class rosters and academic progress
 
 ### 🎓 Student Portal
-* **Performance Dashboard:** Visual insights into academic standing, subject grades, and overall percentages.
-* **Result Breakdowns:** Review detailed exam performances (marks obtained vs. total marks) across all subjects.
-* **Fee Status Tracking:** Transparently check pending dues, payment history, and due dates.
-* **Announcements Feed:** Stay up to date with immediate access to important class notifications and school announcements.
+- Visual performance dashboard with grades and percentages
+- Detailed result breakdowns per subject
+- Fee status and payment history
+- Announcements feed
 
 ## 🛠 Tech Stack
+- **Backend:** PHP
+- **Database:** MySQL
+- **Frontend:** HTML5, CSS3 (Bootstrap + custom stylesheets), JavaScript
 
-* **Backend:** Vanilla PHP natively interconnected with modern structure
-* **Database:** MySQL
-* **Frontend:** HTML5, CSS3 (Bootstrap alongside custom, modern stylesheets), and JavaScript
+## ⚙️ Installation
 
-## ⚙️ Installation & Local Setup
+1. Install [Laragon](https://laragon.org/), XAMPP, or WAMP
+2. Clone or place the `SMS` folder in your server root:
+   - Laragon: `C:\laragon\www\SMS`
+   - XAMPP: `C:\xampp\htdocs\SMS`
+3. Open phpMyAdmin → create a database named `student_management_system` → import the SQL dump
+4. Update credentials in `includes/conn.php` if needed
+5. Visit `http://localhost/SMS`
 
-1. **Prerequisites:** Ensure you have a local web development environment installed such as *Laragon*, *XAMPP*, or *WAMP*.
-2. **Setup the files:** 
-   Place the `SMS` repository folder directly into your server's root directory:
-   * **Laragon:** `C:\laragon\www\SMS`
-   * **XAMPP:** `C:\xampp\htdocs\SMS`
-3. **Database Setup:**
-   * Open your database manager (e.g., phpMyAdmin at `http://localhost/phpmyadmin`).
-   * Create a new database named `student_management_system` (or whatever your backup SQL file assumes).
-   * Import the project's SQL dump into this new database to construct tables and mock data.
-4. **Environment Configuration:** 
-   * Open `includes/conn.php` in a text editor to ensure that the database credentials match your local MySQL configuration (usually `root` for user and an empty password).
-5. **Launch Application:**
-   Open your preferred web browser and navigate to `http://localhost/SMS` to load the application.
 
-## 🔒 Security & Role-Based Access
-Authentication is meticulously handled out-of-the-box leveraging PHP Sessions. The platform dynamically routes and enforces specific layouts based on the `admin`, `teacher`, or `student` role—ensuring isolated environments and uncompromising data integrity.
 
----
+## 🔒 Security
+Role-based access control via PHP Sessions — each role is routed to an isolated environment with enforced permissions.
+
+## Credits
+Dashboard UI adapted from [Duralux – PHP Admin & Dashboard Template](https://themeforest.net/item/duralux-php-admin-dashboard-template/55822753) by maryinparis.
