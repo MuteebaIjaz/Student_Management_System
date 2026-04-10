@@ -1,6 +1,10 @@
 # Student Management System (SMS)
 
 A dynamic, web-based Student Management System designed to streamline and automate day-to-day educational operations. Built with a robust PHP backend and an intuitive, modern frontend, this application provides distinct, secure, and fully-featured portals for Administrators, Teachers, and Students.
+The dashboard UI is based on a design created by [maryinparis].
+I modified and extended the original design to fit this project's requirements.
+
+Original Source: [Duralux - PHP Admin & Dashboard Bootstrap Template](https://themeforest.net/item/duralux-php-admin-dashboard-template/55822753)
 
 ## 🚀 Key Features
 
