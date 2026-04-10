@@ -45,8 +45,8 @@ $Name=$_POST['Name'];
     <meta name="description" content="" />
     <meta name="keyword" content="" />
     <meta name="author" content="flexilecode" />
-    <title>Dashboard</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
+    <title>Add Teacher | SMS</title>
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
@@ -69,8 +69,8 @@ $Name=$_POST['Name'];
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
+                        <li class="breadcrumb-item"><a href="admin.php">Home</a></li>
+                        <li class="breadcrumb-item">Add Teacher</li>
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

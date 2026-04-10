@@ -14,9 +14,9 @@ session_start();
     <meta name="keyword" content="">
     <meta name="author" content="theme_ocean">
   
-    <title>Login</title>
+    <title>Pending | SMS</title>
 
-    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=10">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=11">
  
     <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css">

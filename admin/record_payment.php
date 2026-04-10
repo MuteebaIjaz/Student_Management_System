@@ -49,8 +49,8 @@ $fee_types = mysqli_query($conn, "SELECT * FROM fee_types");
     <meta name="description" content="" />
     <meta name="keyword" content="" />
     <meta name="author" content="flexilecode" />
-    <title>Dashboard</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
+    <title>Fee Payment | SMS</title>
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
@@ -73,8 +73,8 @@ $fee_types = mysqli_query($conn, "SELECT * FROM fee_types");
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
+                        <li class="breadcrumb-item"><a href="admin.php">Home</a></li>
+                        <li class="breadcrumb-item">Fee Payment</li>
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

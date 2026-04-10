@@ -56,8 +56,8 @@ $overall_color = $total_percentage >= 75 ? '#1D9E75' : ($total_percentage >= 65 
     <meta name="description" content="Attendance Page for the Student Management System. Track attendance for each subject." />
     <meta name="keywords" content="Student Management System, SMS, Attendance, Subject Attendance, Attendance Records" />
     <meta name="author" content="Student Management System" />
-    <title>Attendance | Student Management System</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
+    <title>Attendance | SMS</title>
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
@@ -82,8 +82,8 @@ $overall_color = $total_percentage >= 75 ? '#1D9E75' : ($total_percentage >= 65 
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
+                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
+                        <li class="breadcrumb-item">Attendance</li>
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

@@ -9,8 +9,15 @@
                     <label>Navigation</label>
                 </li>
                 <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
+                    <a href="admin.php" class="nxl-link">
                         <span class="nxl-mtext">Home</span><span class="nxl-arrow"><i
+                                class="feather-chevron-right"></i></span>
+                    </a>
+
+                </li>
+                <li class="nxl-item nxl-hasmenu">
+                    <a href="announcements.php" class="nxl-link">
+                        <span class="nxl-mtext">Announcements</span><span class="nxl-arrow"><i
                                 class="feather-chevron-right"></i></span>
                     </a>
 

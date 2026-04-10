@@ -77,8 +77,8 @@ function getGrade($percentage)
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <title>Dashboard</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
+    <title>Result | SMS</title>
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
@@ -101,8 +101,8 @@ include "../includes/header.php";
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
+                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
+                        <li class="breadcrumb-item">Result</li>
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

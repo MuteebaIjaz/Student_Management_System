@@ -16,8 +16,8 @@ exit();
     <meta name="description" content="Announcements Page for the Student Management System. View recent updates and notices." />
     <meta name="keywords" content="Student Management System, SMS, Announcements, Notices, Updates" />
     <meta name="author" content="Student Management System" />
-    <title>Announcements | Student Management System</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
+    <title>Announcements | SMS</title>
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
@@ -42,8 +42,8 @@ exit();
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
+                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
+                        <li class="breadcrumb-item">Announcements</li>
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

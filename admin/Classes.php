@@ -19,8 +19,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin") {
     <meta name="description" content="" />
     <meta name="keyword" content="" />
     <meta name="author" content="flexilecode" />
-    <title>Dashboard</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
+    <title>Classes | SMS</title>
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
@@ -43,8 +43,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin") {
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
+                        <li class="breadcrumb-item"><a href="admin.php">Home</a></li>
+                        <li class="breadcrumb-item">Classes</li>
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">
@@ -101,19 +101,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin") {
             </div>
         </div>
         <?php
-if (isset($_GET['class_id'])) {
-    $class_id = $_GET['class_id'];
-    $query = "SELECT s.student_id, s.Roll_no FROM students s 
+        if (isset($_GET['class_id'])) {
+            $class_id = $_GET['class_id'];
+            $query = "SELECT s.student_id, s.Roll_no FROM students s 
 
  WHERE s.class_id = $class_id
  ORDER BY s.Roll_no ASC;
 
 
  ";
-    $result = mysqli_query($conn, $query);
-    if (mysqli_num_rows($result) > 0) {
-        echo '<div class="table-responsive-wrapper">';
-        echo ' <table class="table registration-table table-hover">
+            $result = mysqli_query($conn, $query);
+            if (mysqli_num_rows($result) > 0) {
+                echo '<div class="table-responsive-wrapper">';
+                echo ' <table class="table registration-table table-hover">
                                     <thead>
                                         <tr>
                                             <th scope="col">SNO</th>
@@ -122,25 +122,25 @@ if (isset($_GET['class_id'])) {
                                         </tr>
                                     </thead>';
 
-        $count = 1;
-        while ($student = mysqli_fetch_assoc($result)) {
-            echo '<tr>';
-            echo '<td>' . $count++ . '</td>';
-            echo '<td>' . $student['Roll_no'] . '</td>';
+                $count = 1;
+                while ($student = mysqli_fetch_assoc($result)) {
+                    echo '<tr>';
+                    echo '<td>' . $count++ . '</td>';
+                    echo '<td>' . $student['Roll_no'] . '</td>';
 
-            echo '</tr>';
+                    echo '</tr>';
+                }
+
+
+                echo '</table></div>'
+
+                ;
+            } else {
+                echo '<div class="alert alert-info">No students found in this class.</div>';
+            }
         }
-
-
-        echo '</table></div>'
-
-        ;
-    } else {
-        echo '<div class="alert alert-info">No students found in this class.</div>';
-    }
-}
-?>     
-<?php
+        ?>
+        <?php
         include "../includes/footer.php";
         ?>
     </main>
