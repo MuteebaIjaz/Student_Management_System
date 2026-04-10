@@ -9,15 +9,20 @@ if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "student") {
 $user_id = $_SESSION['user_id'];
 $student_query = "SELECT `student_id` , `class_id` FROM students WHERE `user_id` = '$user_id'";
 $student_result = mysqli_query($conn, $student_query);
-$student_row = mysqli_fetch_assoc($student_result);
-$student_id = $student_row['student_id'];
-$class_id = $student_row['class_id'];
+
+if ($student_result && mysqli_num_rows($student_result) > 0) {
+    $student_row = mysqli_fetch_assoc($student_result);
+    $student_id = $student_row['student_id'];
+    $class_id = $student_row['class_id'];
+} else {
+    die("Student record not found for this user.");
+}
 
 $query = "SELECT 
     s.subject_name,
     s.code,
     s.type,
-    u.Name AS teacher_name,
+    ANY_VALUE(u.Name) AS teacher_name,
     COUNT(a.attendance_id) AS total_classes,
     SUM(a.status = 'Present') AS attended,
     ROUND((SUM(a.status = 'Present') / COUNT(a.attendance_id)) * 100, 1) AS percentage
@@ -25,13 +30,14 @@ FROM attendance a
 JOIN subject s ON s.subject_id = a.subject_id
 JOIN users u ON u.user_id = a.teacher_id
 WHERE a.student_id = $student_id
-GROUP BY a.subject_id";
+GROUP BY a.subject_id, s.subject_name, s.code, s.type";
 $result = mysqli_query($conn, $query);
-$attendance_per_subject = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 if (!$result) {
     die("Query Failed: " . mysqli_error($conn));
 }
+
+$attendance_per_subject = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 
 $total_held = array_sum(array_column($attendance_per_subject, "total_classes"));
@@ -155,8 +161,12 @@ $overall_color = $total_percentage >= 75 ? '#1D9E75' : ($total_percentage >= 65 
 
                     <?php foreach ($attendance_per_subject as $row): ?>
                         <?php
-                        $words = explode(' ', $row['teacher_name']);
-                        $initials = strtoupper($words[0][0] . (isset($words[1]) ? $words[1][0] : ''));
+                        $teacher_name = trim($row['teacher_name']);
+                        $words = array_values(array_filter(explode(' ', $teacher_name))); // break into parts ignoring multiple spaces
+                        $initials = '';
+                        if (!empty($words[0])) $initials .= strtoupper($words[0][0]);
+                        if (!empty($words[1])) $initials .= strtoupper($words[1][0]);
+                        
                         $pct = $row['percentage'];
                         $color = $pct >= 75 ? '#1D9E75' : ($pct >= 65 ? '#BA7517' : '#D85A30');
                         $bg = $pct >= 75 ? '#E1F5EE' : ($pct >= 65 ? '#FAEEDA' : '#FAECE7');

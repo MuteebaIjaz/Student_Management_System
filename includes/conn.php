@@ -1,5 +1,6 @@
 <?php
 
+$conn = mysqli_connect("localhost","root","","student_management_system","3306");
 $db_host = getenv('DB_HOST') ?: "localhost";
 $db_user = getenv('DB_USER') ?: "root";
 $db_pass = getenv('DB_PASS') ?: "";
