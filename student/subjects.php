@@ -27,7 +27,7 @@ $result = mysqli_query($conn, $query);
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="IE=edge" />
     <title>Dashboard</title>
-    <link rel="shortcut icon" type="image/x-icon" href="../assets/images/favicon.ico" />
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />

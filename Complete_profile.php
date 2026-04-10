@@ -108,7 +108,7 @@ if (isset($_POST['Save_Profile'])) {
 
     <title>Login</title>
 
-    <link rel="shortcut icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=10">
 
     <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css">

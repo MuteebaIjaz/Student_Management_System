@@ -49,7 +49,7 @@ if(isset($_POST['Register'])){
     <meta name="keyword" content="">
     <meta name="author" content="theme_ocean">
     <title>Register</title>
-    <link rel="shortcut icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=10">
     <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css">
     <link rel="stylesheet" type="text/css" href="assets/css/theme.min.css">

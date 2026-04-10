@@ -57,7 +57,7 @@ $overall_color = $total_percentage >= 75 ? '#1D9E75' : ($total_percentage >= 65 
     <meta name="keywords" content="Student Management System, SMS, Attendance, Subject Attendance, Attendance Records" />
     <meta name="author" content="Student Management System" />
     <title>Attendance | Student Management System</title>
-    <link rel="shortcut icon" type="image/x-icon" href="../assets/images/favicon.ico" />
+    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=10" />
     <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
     <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
