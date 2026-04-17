@@ -1,267 +1,208 @@
 <?php
-require_once "../includes/conn.php";
-session_start();
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('admin');
+
+$pageTitle = "Attendance Control";
 date_default_timezone_set("Asia/Karachi");
 
-if (!isset($_SESSION['user_id']) || (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== "admin")) {
-    header("Location:../Login.php");
-    exit();
-}
+$class_id = $_GET['class_id'] ?? null;
+$subject_id = $_GET['subject_id'] ?? null;
+$attendance_date = $_GET['attendance_date'] ?? date('Y-m-d');
 
-
-if (isset($_POST['save_attendance'])) {
-    $class_id = $_POST['class_id'];
+// Processing Saves/Updates
+if (isset($_POST['save_attendance']) || isset($_POST['edit_attendance'])) {
+    $c_id = $_POST['class_id'];
+    $s_id = $_POST['subject_id'];
+    $date = $_POST['attendance_date'];
     $teacher_id = $_SESSION['user_id'];
-    $subject_id = $_POST['subject_id'];
-    $date = isset($_POST['attendance_date']) ? $_POST['attendance_date'] : date('Y-m-d');
+    $status_data = $_POST['status'] ?? [];
 
-    foreach ($_POST['status'] as $student_id => $status) {
-        $check = mysqli_query(
-            $conn,
-            "SELECT * FROM attendance WHERE student_id='$student_id'
-             AND subject_id='$subject_id'
-             AND date='$date'"
-        );
-
-        if (mysqli_num_rows($check) == 0) {
-            $query = "INSERT INTO `attendance`(`class_id`, `student_id`, `subject_id`, `teacher_id`, `date`, `status`) 
-                      VALUES ('$class_id','$student_id','$subject_id','$teacher_id','$date','$status')";
-            mysqli_query($conn, $query);
+    try {
+        $pdo->beginTransaction();
+        foreach ($status_data as $student_id => $status) {
+            // Upsert logic for PDO
+            $stmt = $pdo->prepare("
+                INSERT INTO attendance (class_id, student_id, subject_id, teacher_id, date, status) 
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE status = ?, teacher_id = ?
+            ");
+            $stmt->execute([$c_id, $student_id, $s_id, $teacher_id, $date, $status, $status, $teacher_id]);
         }
+        $pdo->commit();
+        $_SESSION['success'] = "Attendance records synchronized successfully!";
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $_SESSION['error'] = "Sync failed: " . $e->getMessage();
     }
-
-    $_SESSION['success'] = "Attendance marked successfully!";
-    header("Location:mark_attendance.php");
+    header("Location: mark_attendance.php?class_id=$c_id&subject_id=$s_id&attendance_date=$date");
     exit();
 }
 
-if (isset($_POST['edit_attendance'])) {
-    $class_id = $_POST['class_id'];
-    $teacher_id = $_SESSION['user_id'];
-    $subject_id = $_POST['subject_id'];
-    $date = isset($_POST['attendance_date']) ? $_POST['attendance_date'] : date('Y-m-d');
-    foreach ($_POST['status'] as $student_id => $status) {
-        $update_query = "UPDATE `attendance` SET `status` = '$status' ,`teacher_id`= '$teacher_id' WHERE 
-`student_id` = '$student_id' AND `subject_id` = '$subject_id' AND `date` = '$date'
-";
-        $update_result = mysqli_query($conn, $update_query);
-       
+// Data Fetching
+try {
+    $classes = $pdo->query("SELECT * FROM classes ORDER BY class_name ASC")->fetchAll();
+    $subjects = [];
+    $students = [];
+    $existing_records = [];
 
+    if ($class_id) {
+        $stmtS = $pdo->prepare("
+            SELECT DISTINCT s.subject_id, s.subject_name 
+            FROM subject s 
+            JOIN class_subject_teacher cst ON cst.subject_id = s.subject_id 
+            WHERE cst.class_id = ?
+        ");
+        $stmtS->execute([$class_id]);
+        $subjects = $stmtS->fetchAll();
     }
-    $_SESSION['success'] = "Attendance updated successfully!";
-header("Location: mark_attendance.php");
-exit();
+
+    if ($class_id && $subject_id) {
+        $stmtSt = $pdo->prepare("SELECT student_id, Roll_no, user_id FROM students WHERE class_id = ? ORDER BY Roll_no ASC");
+        $stmtSt->execute([$class_id]);
+        $students = $stmtSt->fetchAll();
+
+        $stmtEx = $pdo->prepare("SELECT student_id, status FROM attendance WHERE subject_id = ? AND date = ?");
+        $stmtEx->execute([$subject_id, $attendance_date]);
+        $existing_records = $stmtEx->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
 }
 ?>
-<!DOCTYPE html>
-<html lang="zxx">
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Attendance | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-</head>
+<?php include __DIR__ . '/../includes/navbar/admin_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-
-<body>
-    <?php
-    include "../includes/navbar/admin_navbar.php";
-    include "../includes/header.php";
-
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="admin.php">Home</a></li>
-                        <li class="breadcrumb-item">Attendance</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="registration-container">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="registration-table-card">
-                            <div class="registration-table-header">
-                                <h4>Mark Attendance:</h4>
-                            </div>
-
-                            <div class="card mb-4  mx-4 mx-sm-0 position-relative">
-
-                                <div class="card-body p-sm-5">
-                                    <?php
-                                    if (isset($_SESSION['error'])) {
-                                        echo "<div class='w-100 mt-4 pt-2 text-danger'>" . $_SESSION['error'] . "</div>";
-                                        unset($_SESSION['error']);
-                                    }
-                                    if (isset($_SESSION['success'])) {
-                                        echo "<div class='w-100 mt-4 pt-2 text-success'>" . $_SESSION['success'] . "</div>";
-                                        unset($_SESSION['success']);
-                                    }
-
-                                    ?>
-                                    <form method="GET" class="mb-4">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label>Select Class</label>
-                                                <select name="class_id" class="form-control" required
-                                                    onchange="this.form.submit()">
-                                                    <option disabled selected>Select Class</option>
-                                                    <?php
-                                                    $classes = mysqli_query($conn, "SELECT class_id, class_name, section FROM classes");
-                                                    while ($row = mysqli_fetch_assoc($classes)) {
-                                                        $selected = (isset($_GET['class_id']) && $_GET['class_id'] == $row['class_id']) ? "selected" : "";
-                                                        echo "<option value='{$row['class_id']}' $selected>{$row['class_name']} - {$row['section']}</option>";
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </div>
-
-                                            <div class="col-md-4 mb-3">
-                                                <label>Select Subject</label>
-                                                <select name="subject_id" class="form-control" required <?php echo isset($_GET['class_id']) ? "" : "disabled"; ?>>
-                                                    <option disabled selected>Select Subject</option>
-                                                    <?php
-                                                    if (isset($_GET['class_id'])) {
-                                                        $class_id = $_GET['class_id'];
-                                                        $subjects = mysqli_query($conn, "SELECT DISTINCT s.subject_id, s.subject_name 
-                                                             FROM subject s 
-                                                             JOIN class_subject_teacher cst ON cst.subject_id = s.subject_id 
-                                                             WHERE cst.class_id = '$class_id'");
-                                                        while ($row = mysqli_fetch_assoc($subjects)) {
-                                                            $selected = (isset($_GET['subject_id']) && $_GET['subject_id'] == $row['subject_id']) ? "selected" : "";
-                                                            echo "<option value='{$row['subject_id']}' $selected>{$row['subject_name']}</option>";
-                                                        }
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </div>
-
-                                            <div class="col-md-4 mb-3">
-                                                <label>Attendance Date</label>
-                                                <?php
-                                                $selected_date = isset($_GET['attendance_date']) ? $_GET['attendance_date'] : date('Y-m-d');
-                                                ?>
-                                                <input type="date" name="attendance_date" class="form-control"
-                                                    value="<?php echo ($selected_date); ?>"
-                                                    max="<?php echo date('Y-m-d'); ?>" required>
-                                            </div>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">Load Students</button>
-                                    </form>
-
-                                    <?php
-                                    if (isset($_GET['class_id']) && isset($_GET['subject_id'])) {
-                                        $class_id = $_GET['class_id'];
-                                        $subject_id = $_GET['subject_id'];
-
-                                        $students = mysqli_query($conn, "SELECT student_id, Roll_no FROM students WHERE class_id='$class_id' ORDER BY Roll_no ASC");
-
-                                        if (mysqli_num_rows($students) > 0) {
-                                            $attendance_date = isset($_GET['attendance_date']) ? $_GET['attendance_date'] : date('Y-m-d');
-
-                                            $check_existing = mysqli_query($conn, "SELECT * FROM attendance WHERE subject_id='$subject_id' AND date='$attendance_date' LIMIT 1");
-                                            $attendance_exists = (mysqli_num_rows($check_existing) > 0);
-
-                                            echo '<form method="POST">';
-                                            echo "<input type='hidden' name='class_id' value='$class_id'>";
-                                            echo "<input type='hidden' name='subject_id' value='$subject_id'>";
-                                            echo "<input type='hidden' name='attendance_date' value='$attendance_date'>";
-                                            echo '<div class="table-responsive">';
-                                            echo '<table class="table table-bordered">';
-                                            echo '<thead><tr><th>S.No</th><th>Roll Number</th><th>Present</th><th>Absent</th></tr></thead><tbody>';
-
-                                            $count = 1;
-                                            while ($student = mysqli_fetch_assoc($students)) {
-                                                $student_id = $student['student_id'];
-                                                $present_checked = "";
-                                                $absent_checked = "";
-
-                                                if ($attendance_exists) {
-                                                    $status_query = mysqli_query($conn, "SELECT status AS Status FROM attendance WHERE student_id='$student_id' AND subject_id='$subject_id' AND date='$attendance_date'");
-                                                    if (mysqli_num_rows($status_query) > 0) {
-                                                        $record = mysqli_fetch_assoc($status_query);
-                                                        if ($record['Status'] == 'Present')
-                                                            $present_checked = "checked";
-                                                        if ($record['Status'] == 'Absent')
-                                                            $absent_checked = "checked";
-                                                    }
-                                                }
-
-                                                echo '<tr>';
-                                                echo '<td>' . $count++ . '</td>';
-                                                echo '<td>' . $student['Roll_no'] . '</td>';
-                                                echo '<td><input type="radio" name="status[' . $student_id . ']" value="Present" required ' . $present_checked . '></td>';
-                                                echo '<td><input type="radio" name="status[' . $student_id . ']" value="Absent" required ' . $absent_checked . '></td>';
-                                                echo '</tr>';
-                                            }
-
-                                            echo '</tbody></table></div>';
-
-                                            if ($attendance_exists) {
-                                                echo '<button type="submit" name="edit_attendance" class="btn btn-warning mt-3">Update Attendance</button>';
-                                            } else {
-                                                echo '<button type="submit" name="save_attendance" class="btn btn-success mt-3">Save Attendance</button>';
-                                            }
-
-                                            echo '</form>';
-                                        } else {
-                                            echo '<div class="alert alert-info">No students found in this class.</div>';
-                                        }
-                                    }
-                                    ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Daily Attendance</h4>
+                    <p class="text-muted small">Record presence and track academic engagement in real-time.</p>
                 </div>
             </div>
         </div>
-    </main>
 
+    <div class="container-fluid mt-4">
+        <!-- Filter Bar -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius);">
+            <div class="card-body p-4">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">Class & Section</label>
+                        <select name="class_id" class="form-control" onchange="this.form.submit()" required>
+                            <option value="" disabled <?php echo !$class_id ? 'selected' : ''; ?>>Select Class</option>
+                            <?php foreach ($classes as $row): ?>
+                                <option value="<?php echo $row['class_id']; ?>" <?php echo ($class_id == $row['class_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($row['class_name'] . " - " . $row['section']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">Subject</label>
+                        <select name="subject_id" class="form-control" required <?php echo !$class_id ? 'disabled' : ''; ?>>
+                            <option value="" disabled <?php echo !$subject_id ? 'selected' : ''; ?>>Select Subject</option>
+                            <?php foreach ($subjects as $row): ?>
+                                <option value="<?php echo $row['subject_id']; ?>" <?php echo ($subject_id == $row['subject_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($row['subject_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">Date</label>
+                        <input type="date" name="attendance_date" class="form-control" value="<?php echo $attendance_date; ?>" max="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-dark w-100 py-2"><i class="feather-search"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
+        <?php if ($class_id && $subject_id): ?>
+            <form method="POST">
+                <input type="hidden" name="class_id" value="<?php echo $class_id; ?>">
+                <input type="hidden" name="subject_id" value="<?php echo $subject_id; ?>">
+                <input type="hidden" name="attendance_date" value="<?php echo $attendance_date; ?>">
+                
+                <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">Class Roster</h5>
+                            <p class="text-muted small mb-0"><?php echo count($students); ?> Students found</p>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 me-2" onclick="markAll('Present')">All Present</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="markAll('Absent')">All Absent</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="ps-4 py-3 text-muted small text-uppercase" style="width: 80px;">Roll No</th>
+                                        <th class="py-3 text-muted small text-uppercase">Student Name</th>
+                                        <th class="py-3 text-muted small text-uppercase text-center" style="width: 200px;">Status Selection</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (count($students) > 0): ?>
+                                        <?php foreach ($students as $row): 
+                                            $status = $existing_records[$row['student_id']] ?? '';
+                                        ?>
+                                            <tr>
+                                                <td class="ps-4 fw-bold"><?php echo htmlspecialchars($row['Roll_no']); ?></td>
+                                                <td>
+                                                    <?php 
+                                                        // Quick name fetch for display
+                                                        $nameStmt = $pdo->prepare("SELECT Name FROM users WHERE user_id = ?");
+                                                        $nameStmt->execute([$row['user_id']]);
+                                                        echo htmlspecialchars($nameStmt->fetchColumn());
+                                                    ?>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="btn-group w-100">
+                                                        <input type="radio" class="btn-check" name="status[<?php echo $row['student_id']; ?>]" id="p_<?php echo $row['student_id']; ?>" value="Present" autocomplete="off" <?php echo $status=='Present' ? 'checked' : ''; ?> required>
+                                                        <label class="btn btn-sm btn-outline-success py-2" for="p_<?php echo $row['student_id']; ?>">Present</label>
 
-</html>
+                                                        <input type="radio" class="btn-check" name="status[<?php echo $row['student_id']; ?>]" id="a_<?php echo $row['student_id']; ?>" value="Absent" autocomplete="off" <?php echo $status=='Absent' ? 'checked' : ''; ?> required>
+                                                        <label class="btn btn-sm btn-outline-danger py-2" for="a_<?php echo $row['student_id']; ?>">Absent</label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr><td colspan="3" class="text-center py-5">No students found.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top p-4 text-end">
+                        <button type="submit" name="<?php echo $existing_records ? 'edit_attendance' : 'save_attendance'; ?>" class="btn btn-primary px-5 py-2 fw-bold shadow-sm">
+                            <i class="feather-save me-2"></i> <?php echo $existing_records ? 'Sync Updates' : 'Confirm Attendance'; ?>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        <?php else: ?>
+            <div class="text-center py-5 mt-5">
+                <div class="opacity-10 mb-4"><i class="feather-calendar" style="font-size: 6rem;"></i></div>
+                <h5 class="text-muted fw-bold">Select parameters above to load the attendance sheet.</h5>
+            </div>
+        <?php endif; ?>
+    </div>
+</main>
+
+<script>
+function markAll(status) {
+    const radios = document.querySelectorAll(`input[value="${status}"]`);
+    radios.forEach(r => r.checked = true);
+}
+</script>
+
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

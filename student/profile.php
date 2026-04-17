@@ -1,162 +1,149 @@
 <?php
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('student');
 
-session_start();
-if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "student") {
-    header("Location:../Login.php");
-    exit();
+$pageTitle = "Personal Identity";
+$user_id = $_SESSION['user_id'];
+
+try {
+    // Fetch Student & User Data
+    $stmt = $pdo->prepare("
+        SELECT s.*, u.Email, u.Name, s.Profile_Image AS User_Image, c.class_name, c.section
+        FROM students s 
+        JOIN users u ON s.user_id = u.user_id 
+        LEFT JOIN classes c ON s.class_id = c.class_id
+        WHERE s.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    $student = $stmt->fetch();
+
+    if (!$student) {
+        // Redirect to profile completion if record is missing
+        header("Location: ../Complete_profile.php");
+        exit();
+    }
+
+    $profileImage = !empty($student['User_Image']) ? BASE_URL . 'assets/images/profile/' . $student['User_Image'] : $Default_Avatar;
+
+} catch (Exception $e) {
+    die("Profile Retrieval Error: " . $e->getMessage());
 }
-$user_id = $_SESSION["user_id"];
-$query = "SELECT s.*, u.Email, u.Name
-          FROM students s 
-          JOIN users u ON s.user_id = u.user_id 
-          WHERE s.user_id = '$user_id'";
-$result = mysqli_query($conn, $query);
-$student = mysqli_fetch_assoc($result);
 ?>
-<!DOCTYPE html>
-<html lang="zxx">
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Profile | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="profile.css">
-    <link rel="stylesheet" href="student.css">
-</head>
+<?php include __DIR__ . '/../includes/navbar/student_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-
-<body>
-    <?php
-    include "../includes/navbar/student_navbar.php";
-    include "../includes/header.php";
-
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
-                        <li class="breadcrumb-item">Profile</li>
-                    </ul>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Student Profile</h4>
+                    <p class="text-muted small">Your official academic identity and contact record.</p>
                 </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
+            </div>
+            <div class="page-header-right ms-auto">
+                <a href="profile_edit.php" class="btn btn-primary rounded-pill px-4 fw-bold">
+                    <i class="feather-edit-3 me-2"></i> Edit Profile
+                </a>
+            </div>
+        </div>
 
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <!-- Profile Card -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius); overflow: hidden;">
+                        <div class="card-body p-5 text-center">
+                            <div class="mb-4 position-relative d-inline-block">
+                                <img src="<?php echo $profileImage; ?>" class="rounded-circle border border-4 border-white shadow" style="width: 151px; height: 151px; object-fit: cover;">
+                                <div class="position-absolute bottom-0 end-0 bg-success border border-white border-3 rounded-circle" style="width: 25px; height: 25px;"></div>
+                            </div>
+                            <h4 class="fw-bold text-dark mb-1"><?php echo htmlspecialchars($student['Name']); ?></h4>
+                            <p class="text-muted small mb-3">Enrolled Student</p>
+                            <div class="d-flex justify-content-center gap-2 mb-4">
+                                <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold"><?php echo htmlspecialchars($student['class_name'] . ' - ' . $student['section']); ?></span>
+                                <span class="badge bg-dark-soft text-dark px-3 py-2 rounded-pill fw-bold">#<?php echo htmlspecialchars($student['Roll_no']); ?></span>
+                            </div>
+                        </div>
+                        <div class="bg-gray-100 p-4 border-top">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small fw-bold">Student ID</span>
+                                <span class="text-dark small fw-bold"><?php echo str_pad($student['student_id'], 5, '0', STR_PAD_LEFT); ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small fw-bold">Academic Status</span>
+                                <span class="text-success small fw-bold">Active</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
+                </div>
+
+                <!-- Info Column -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-header bg-white border-bottom py-3 px-4">
+                            <h5 class="fw-bold mb-0">Identity Details</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Full Legal Name</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo htmlspecialchars($student['Name']); ?></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Email Correspondence</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo htmlspecialchars($student['Email']); ?></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Mobile Contact</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo htmlspecialchars($student['phone'] ?: 'N/A'); ?></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Date of Birth</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo $student['dob'] ? date('M d, Y', strtotime($student['dob'])) : 'N/A'; ?></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Gender Expression</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo ucfirst(htmlspecialchars($student['gender'] ?: 'N/A')); ?></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="flex-grow-1 pt-3 border-top mt-2">
+                                        <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Residential Address</div>
+                                        <div class="fw-bold text-dark fs-5"><?php echo htmlspecialchars($student['address'] ?: 'No address specified in record.'); ?></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mt-4" style="border-radius: var(--radius);">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary-soft text-primary rounded-circle p-3 me-3">
+                                    <i class="feather-shield fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Data Security Notice</h6>
+                                    <p class="text-muted small mb-0">Your profile information is only visible to you and the academic administration department.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
+    </div>
+</main>
 
-
-            <div class="page">
-                <div class="class-badge">
-                    <h1><b>My Profile</b></h1>
-                </div>
-
-                <div class="fade-up" style="padding: 20px 0; text-align: center;">
-                    <div class="avatar-wrap">
-                        <img src="../student_images/<?php echo $student['Profile_Image'] ?>" alt="Profile Picture">
-                    </div>
-
-                    <div class="mt-3">
-                        <h1 style="font-size: 28px; font-weight: 600; color: #333; margin-top: 10px;"><?php echo $student['Name'] ?></h1>
-                        <span class="profile-role">Student</span>
-
-                        <div class="stat-pills" style="justify-content: center;">
-                            <div class="stat-pill">Class: <span><?php echo $student['class_id'] ?></span></div>
-                            <div class="stat-pill">Roll No: <span><?php echo $student['Roll_no'] ?></span></div>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 fade-up" style="text-align: left;">
-                        <h5 style="margin-bottom: 20px; font-weight: 600; color: #333;">Personal Information</h5>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="info-icon text-primary"><i class="feather-mail"></i></div>
-                                <div class="info-label">Email Address</div>
-                                <div class="info-value"><?php echo $student['Email'] ?></div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon text-success"><i class="feather-phone"></i></div>
-                                <div class="info-label">Phone Number</div>
-                                <div class="info-value"><?php echo $student['phone'] ?></div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon text-warning"><i class="feather-calendar"></i></div>
-                                <div class="info-label">Date of Birth</div>
-                                <div class="info-value"><?php echo $student['dob'] ?></div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon text-info"><i class="feather-user"></i></div>
-                                <div class="info-label">Gender</div>
-                                <div class="info-value"><?php echo $student['gender'] ?></div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon text-danger"><i class="feather-map-pin"></i></div>
-                                <div class="info-label">Address</div>
-                                <div class="info-value"><?php echo $student['address'] ?></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4" style="text-align: left;">
-                        <a href="profile_edit.php" class="btn btn-primary">
-                            <i class="feather-edit"></i> Edit Profile
-                        </a>
-                    </div>
-                </div>
-
-            </div></div>
-
-
-
-
-
-
-
-        <?php
-
-        include "../includes/footer.php";
-        ?>
-    </main>
-
-
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

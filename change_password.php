@@ -1,120 +1,102 @@
 <?php
-session_start();
-require_once "includes/conn.php";
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth_helper.php';
 
-
+// Ensure user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location:Login.php");
+    header("Location: " . BASE_URL . "Login.php");
     exit();
 }
 
+$error = $_SESSION['error'] ?? null;
+$success = $_SESSION['success'] ?? null;
+unset($_SESSION['error'], $_SESSION['success']);
+
 if (isset($_POST['Save_Password'])) {
     $newPassword = $_POST['new_password'];
-    $user_id = $_SESSION['user_id'];
-    $hashedpassword = password_hash($newPassword, PASSWORD_DEFAULT);
     $confirmPassword = $_POST['confirm_password'];
+    $user_id = $_SESSION['user_id'];
+
     if (strlen($newPassword) < 6) {
         $_SESSION['error'] = "Password must be at least 6 characters!";
-        header("Location: change_password.php");
+        header("Location: " . BASE_URL . "change_password.php");
         exit();
     }
+    
     if ($newPassword !== $confirmPassword) {
-        $_SESSION['error'] = "Passwords donot match!";
-        header("Location:change_password.php");
+        $_SESSION['error'] = "Passwords do not match!";
+        header("Location: " . BASE_URL . "change_password.php");
         exit();
     }
 
-    $updateQuery = "UPDATE `users` SET `is_first_login` = 0,password = '$hashedpassword' WHERE user_id = $user_id";
-    $updateResult = mysqli_query($conn, $updateQuery);
-    if ($updateResult) {
-        header("Location:teacher/teacher.php");
-        exit();
-    } else {
-        $_SESSION['error'] = "There is an error in changing password!";
-        header("Location:change_password.php");
+    try {
+        $hashedpassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE users SET password = ?, is_first_login = 0 WHERE user_id = ?");
+        $stmt->execute([$hashedpassword, $user_id]);
+
+        $_SESSION['success'] = "Password changed successfully! Redirecting...";
+        
+        // Auto redirect based on role
+        $role = $_SESSION['user_role'];
+        $redirect = BASE_URL . ($role == 'admin' ? 'admin/admin.php' : ($role == 'teacher' ? 'teacher/teacher.php' : 'student/student.php'));
+        
+        header("Refresh: 2; URL=" . $redirect);
+    } catch (Exception $e) {
+        $_SESSION['error'] = "Failed to update password. Try again.";
+        header("Location: " . BASE_URL . "change_password.php");
         exit();
     }
-
 }
 ?>
-
 <!DOCTYPE html>
-<html lang="zxx">
-
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="keyword" content="">
-    <meta name="author" content="theme_ocean">
-
-    <title>Change Password | SMS</title>
-
-    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=11">
-
-    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css">
-
-    <link rel="stylesheet" type="text/css" href="assets/css/theme.min.css">
-
+    <title>Secure Password Update | Zenith Learn</title>
+    <link rel="shortcut icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png">
+    <link rel="stylesheet" type="text/css" href="<?php echo BASE_URL; ?>assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo BASE_URL; ?>assets/css/main.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
 </head>
-
 <body>
+    <main class="auth-wrapper">
+        <div class="glass-card text-center">
+            <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="Logo" class="auth-logo">
+            <h2 class="fw-bold mb-1">Security Update</h2>
+            <p class="text-muted mb-4">Please set your new secure password</p>
+            
+            <?php if ($error): ?>
+                <div class="alert alert-danger py-2 small mb-4"><?php echo $error; ?></div>
+            <?php endif; ?>
 
-    <main class="auth-minimal-wrapper">
-        <div class="auth-minimal-inner">
-            <div class="minimal-card-wrapper">
-                <div class="card mb-4 mt-5 mx-4 mx-sm-0 position-relative">
-
-                    <div class="card-body p-sm-5">
-                        <h2 class="fs-20 fw-bolder mb-4 text-center">
-                            Enter New Password:
-                        </h2>
-                        <?php
-                        if (isset($_SESSION['error'])) {
-                            echo "<div class='w-100 mt-4 pt-2 text-danger'>" . $_SESSION['error'] . "</div>";
-                            unset($_SESSION['error']);
-                        }
-                        if (isset($_SESSION['success'])) {
-                            echo "<div class='w-100 mt-4 pt-2 text-success'>" . $_SESSION['success'] . "</div>";
-                            unset($_SESSION['success']);
-                        }
-
-                        ?>
-                        <form action="" method="post" class="w-100 mt-4 pt-2">
-
-                            <div class="mb-4">
-                                <input type="password" class="form-control" placeholder="Change Password"
-                                    name="new_password" required>
-                            </div>
-                            <div class="mb-4">
-                                <input type="password" class="form-control" placeholder="Confirm Password"
-                                    name="confirm_password" required>
-                            </div>
-
-
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-lg btn-primary w-100" name="Save_Password">
-                                    Change Password</button>
-                            </div>
-                        </form>
-
-
-                    </div>
+            <?php if ($success): ?>
+                <div class="alert alert-success py-2 small mb-4 text-start">
+                    <i class="feather-check-circle me-2"></i> <?php echo $success; ?>
                 </div>
-            </div>
+            <?php endif; ?>
+
+            <form action="" method="post" class="text-start">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">New Password</label>
+                    <input type="password" class="form-control" name="new_password" placeholder="••••••••" required autofocus>
+                    <div class="form-text fs-11 text-muted">Minimum 6 characters recommended.</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">Confirm Password</label>
+                    <input type="password" class="form-control" name="confirm_password" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" name="Save_Password" class="btn btn-primary w-100 mb-3">
+                    Update Password
+                </button>
+            </form>
+            
+            <p class="small text-muted mb-0">
+                Logged in as <b><?php echo htmlspecialchars($_SESSION['user_name']); ?></b>
+            </p>
         </div>
     </main>
-
-    <!--! BEGIN: Vendors JS !-->
-    <script src="assets/vendors/js/vendors.min.js"></script>
-    <!-- vendors.min.js {always must need to be top} -->
-    <!--! END: Vendors JS !-->
-    <!--! BEGIN: Apps Init  !-->
-    <script src="assets/js/common-init.min.js"></script>
-    <!--! END: Apps Init !-->
-
 </body>
-
 </html>

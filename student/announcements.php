@@ -1,169 +1,136 @@
 <?php
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('student');
 
-session_start();
-if(empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "student"){
-header("Location:../Login.php");
-exit();
+$pageTitle = "Announcements Hub";
+$user_id = $_SESSION['user_id'];
+
+try {
+    // 1. Get Student's Class ID
+    $studentStmt = $pdo->prepare("SELECT class_id FROM students WHERE user_id = ?");
+    $studentStmt->execute([$user_id]);
+    $student = $studentStmt->fetch();
+
+    if (!$student) {
+        // Redirect to profile completion if record is missing
+        header("Location: ../Complete_profile.php");
+        exit();
+    }
+
+    $class_id = $student['class_id'];
+
+    // 2. Fetch Announcements for this Class
+    $announcementsStmt = $pdo->prepare("
+        SELECT * FROM announcements 
+        WHERE target_audience = ? OR target_audience = 'all'
+        ORDER BY created_at DESC
+    ");
+    $announcementsStmt->execute([$class_id]);
+    $announcements = $announcementsStmt->fetchAll();
+
+} catch (Exception $e) {
+    die("Announcement Retrieval Error: " . $e->getMessage());
 }
 ?>
-<!DOCTYPE html>
-<html lang="zxx">
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="description" content="Announcements Page for the Student Management System. View recent updates and notices." />
-    <meta name="keywords" content="Student Management System, SMS, Announcements, Notices, Updates" />
-    <meta name="author" content="Student Management System" />
-    <title>Announcements | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="student.css">
-</head>
+<?php include __DIR__ . '/../includes/navbar/student_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-
-<body>
-   <?php
-   include "../includes/navbar/student_navbar.php";
-   include "../includes/header.php";
-
-   ?>
-   
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
-                        <li class="breadcrumb-item">Announcements</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Notice Board</h4>
+                    <p class="text-muted small">Stay informed with the latest updates and archival notices from the administration.</p>
                 </div>
             </div>
-          
-
-            <div class="page">
-                <div class="class-badge">
-                    <h1><b>Announcements</b></h1>
+            <div class="page-header-right ms-auto">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-warning-soft text-warning px-3 py-2 rounded-pill fw-bold me-2">
+                        <i class="feather-bell me-1"></i> <?php echo count($announcements); ?> Total
+                    </span>
                 </div>
-
-                <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
-                    <div>
-                        <div class="class-chip">
-                            <span class="chip-dot"></span>
-                            Recent Updates
-                        </div>
-                        <p class="page-sub">
-                            Stay up to date with the latest notices from your institution
-                        </p>
-                    </div>
-                </div>
-
-                <div class="subjects-grid">
-                    <?php
-                    $user_id = $_SESSION['user_id'];
-                    $select_query = "SELECT `class_id` FROM `students` WHERE `user_id` = '$user_id'";
-                    $select_result = mysqli_query($conn,$select_query);
-                    $student = mysqli_fetch_assoc($select_result);
-                    $count = 1;
-                    $class_id = $student['class_id'];
-                    $query = "SELECT * FROM `announcements` WHERE `target_audience` = '$class_id' ORDER BY `created_at` DESC LIMIT 5";
-                    $result = mysqli_query($conn,$query);
-                    
-                    if(mysqli_num_rows($result) > 0){
-                        while($announcement = mysqli_fetch_assoc($result)){
-                            $title = htmlspecialchars($announcement['title']);
-                            $message = htmlspecialchars($announcement['message']);
-                            $dateStr = strtotime($announcement['created_at']);
-                            $is_recent = (time() - $dateStr) < (86400 * 3); // 3 days
-                    ?>
-                            <div class="result-card" style="display:flex; flex-direction:column;">
-                                <div class="card-top">
-                                    <div class="subj-icon" style="background:#eeebfb;color:#4a2fa0;font-size:18px;">
-                                        <i class="feather-bell"></i>
-                                    </div>
-                                    <?php if($is_recent): ?>
-                                    <span class="grade-pill" style="background:#E1F5EE;color:#1D9E75;">
-                                        New
-                                    </span>
-                                    <?php else: ?>
-                                    <span class="grade-pill" style="background:var(--surface2);color:var(--ink3);">
-                                        Notice
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-
-                                <div class="subj-name" style="font-size:16px; margin-bottom:8px;">
-                                    <?php echo $count++ . '. ' . $title; ?>
-                                </div>
-
-                                <div style="margin-bottom:12px; color:var(--ink2); font-size:13.5px; line-height:1.5;">
-                                    <?php echo nl2br($message); ?>
-                                </div>
-
-                                <hr class="card-divider" style="margin-top:auto;">
-
-                                <div class="teacher-row" style="margin-bottom:0; justify-content:space-between;">
-                                    <div class="pct-label"><i class="feather-calendar me-1"></i> <?php echo date('F j, Y', $dateStr); ?></div>
-                                    <div class="pct-label"><i class="feather-clock me-1"></i> <?php echo date('g:i A', $dateStr); ?></div>
-                                </div>
-                            </div>
-                    <?php
-                        }
-                    } else {
-                    ?>
-                        <div class="empty-state" style="grid-column: 1 / -1;">
-                            <div class="empty-icon">🔔</div>
-                            <div class="empty-title">No announcements</div>
-                            <div class="empty-sub">We'll alert you here when there are new updates.</div>
-                        </div>
-                    <?php
-                    }
-                    ?>
-                </div>
-
             </div>
         </div>
 
-        <br>  
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <div class="col-lg-8">
+                    <?php if (count($announcements) > 0): ?>
+                        <div class="d-flex flex-column gap-4">
+                            <?php foreach ($announcements as $row): 
+                                $isRecent = (time() - strtotime($row['created_at'])) < (86400 * 3);
+                            ?>
+                                <div class="card border-0 shadow-sm position-relative overflow-hidden" style="border-radius: var(--radius);">
+                                    <?php if ($isRecent): ?>
+                                        <div class="position-absolute top-0 start-0 h-100 bg-primary" style="width: 4px;"></div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-gray-100 text-dark rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                    <i class="feather-message-square"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0"><?php echo htmlspecialchars($row['title']); ?></h6>
+                                                    <div class="text-muted fs-11"><?php echo date('M d, Y • h:i A', strtotime($row['created_at'])); ?></div>
+                                                </div>
+                                            </div>
+                                            <?php if ($isRecent): ?>
+                                                <span class="badge bg-primary-soft text-primary rounded-pill small fw-bold px-3">Recent</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <div class="ps-5">
+                                            <p class="text-secondary mb-0" style="line-height: 1.6;">
+                                                <?php echo nl2br(htmlspecialchars($row['message'])); ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                            <div class="card-body py-5 text-center">
+                                <div class="opacity-10 mb-4"><i class="feather-bell-off" style="font-size: 5rem;"></i></div>
+                                <h5 class="text-muted fw-bold">Silence is golden.</h5>
+                                <p class="small text-muted">No official announcements have been recorded for your class yet.</p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
-      <?php
-      include "../includes/footer.php";
-      ?>
-    </main>
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius); background: linear-gradient(135deg, var(--primary) 0%, #4a2fa0 100%);">
+                        <div class="card-body p-4 text-white">
+                            <h6 class="fw-bold mb-3">Need Assistance?</h6>
+                            <p class="small mb-4 opacity-75">If you have questions regarding any official notice, please contact the student affairs office directly.</p>
+                            <a href="mailto:support@zenithlearn.edu" class="btn btn-white btn-sm fw-bold rounded-pill px-4 text-primary">Contact Support</a>
+                        </div>
+                    </div>
 
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-header bg-white border-bottom py-3 px-4">
+                            <h6 class="fw-bold mb-0">Subscription Settings</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" checked id="emailNotify">
+                                <label class="form-check-label fs-11 fw-bold text-dark" for="emailNotify">Email Notifications</label>
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" checked id="pushNotify">
+                                <label class="form-check-label fs-11 fw-bold text-dark" for="pushNotify">Web Push Alerts</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

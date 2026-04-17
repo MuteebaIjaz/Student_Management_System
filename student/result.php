@@ -1,354 +1,183 @@
 <?php
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('student');
 
-session_start();
-if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "student") {
-    header("Location:../Login.php");
-    exit();
+$pageTitle = "Academic Achievements";
+$user_id = $_SESSION['user_id'];
+
+try {
+    // Fetch Student ID and Class
+    $studentStmt = $pdo->prepare("SELECT student_id, class_id FROM students WHERE user_id = ?");
+    $studentStmt->execute([$user_id]);
+    $student = $studentStmt->fetch();
+
+    if (!$student) {
+        // Redirect to profile completion if record is missing
+        header("Location: ../Complete_profile.php");
+        exit();
+    }
+
+    $student_id = $student['student_id'];
+    $class_id = $student['class_id'];
+
+    // Fetch All Marks
+    $marksStmt = $pdo->prepare("
+        SELECT 
+            s.subject_name, s.code, s.type,
+            u.Name AS teacher_name,
+            m.exam_type, m.date, m.total_marks, m.marks,
+            ROUND((m.marks / m.total_marks) * 100, 1) AS percentage
+        FROM marks m
+        JOIN subject s ON s.subject_id = m.subject_id
+        JOIN class_subject_teacher cst ON cst.subject_id = m.subject_id AND cst.class_id = ?
+        JOIN users u ON u.user_id = cst.teacher_id
+        WHERE m.student_id = ?
+        ORDER BY m.date DESC
+    ");
+    $marksStmt->execute([$class_id, $student_id]);
+    $allMarks = $marksStmt->fetchAll();
+
+    // Grouping by Subject for Summary Cards
+    $bySubject = [];
+    foreach ($allMarks as $m) {
+        $bySubject[$m['subject_name']][] = $m;
+    }
+
+    // Overall Calculation
+    $totalObtained = array_sum(array_column($allMarks, 'marks'));
+    $totalPossible = array_sum(array_column($allMarks, 'total_marks'));
+    $overallPerc = ($totalPossible > 0) ? round(($totalObtained / $totalPossible) * 100, 2) : 0;
+
+} catch (Exception $e) {
+    die("Result Fetch Error: " . $e->getMessage());
 }
 
-$user_id = $_SESSION["user_id"];
-
-$query        = "SELECT `student_id`, `class_id` FROM `students` WHERE `user_id` = '$user_id'";
-$query_result = mysqli_query($conn, $query);
-$student      = mysqli_fetch_assoc($query_result);
-$student_id   = $student['student_id'];
-$class_id     = $student['class_id'];
-
-$result_query = "
-    SELECT u.Name AS student_name, c.class_name, c.section
-    FROM   users u
-    JOIN   students  s ON s.user_id  = u.user_id
-    JOIN   classes   c ON c.class_id = s.class_id
-    WHERE  u.user_id = '$user_id'
-";
-$result       = mysqli_query($conn, $result_query);
-$student_info = mysqli_fetch_assoc($result);
-
-$student_marks = "
-    SELECT
-        s.subject_name,
-        s.code,
-        s.type,
-        u.Name AS teacher_name,
-        m.exam_type,
-        m.date,
-        m.total_marks,
-        m.marks,
-        ROUND((m.marks / m.total_marks) * 100, 1) AS percentage
-    FROM   marks m
-    JOIN   subject               s   ON s.subject_id = m.subject_id
-    JOIN   class_subject_teacher cst ON cst.subject_id = m.subject_id
-                                    AND cst.class_id   = '$class_id'
-    JOIN   users                 u   ON u.user_id      = cst.teacher_id
-    WHERE  m.student_id = '$student_id'
-    ORDER  BY s.subject_name, m.date DESC
-";
-$student_marks_result = mysqli_query($conn, $student_marks);
-$all_marks            = mysqli_fetch_all($student_marks_result, MYSQLI_ASSOC);
-
-$total_obtained    = array_sum(array_column($all_marks, 'marks'));
-$total_marks_sum   = array_sum(array_column($all_marks, 'total_marks'));
-$overall_percentage = ($total_marks_sum > 0)
-    ? round(($total_obtained / $total_marks_sum) * 100, 1)
-    : 0;
-
-$by_subject = [];
-foreach ($all_marks as $m) {
-    $by_subject[$m['subject_name']][] = $m;
+function calculateGrade($p) {
+    if ($p >= 90) return ['A+', 'bg-success-soft text-success'];
+    if ($p >= 80) return ['A', 'bg-success-soft text-success'];
+    if ($p >= 70) return ['B+', 'bg-primary-soft text-primary'];
+    if ($p >= 60) return ['B', 'bg-primary-soft text-primary'];
+    if ($p >= 50) return ['C', 'bg-warning-soft text-warning'];
+    if ($p >= 40) return ['D', 'bg-warning-soft text-warning'];
+    return ['F', 'bg-danger-soft text-danger'];
 }
 
-function getGrade($percentage)
-{
-    if ($percentage >= 90) return ['A+', '#1a7a56', '#e6f5ee'];
-    if ($percentage >= 80) return ['A',  '#1a7a56', '#e6f5ee'];
-    if ($percentage >= 70) return ['B+', '#1a4f8a', '#e6eff9'];
-    if ($percentage >= 60) return ['B',  '#1a4f8a', '#e6eff9'];
-    if ($percentage >= 50) return ['C',  '#9a6200', '#fdf3dc'];
-    if ($percentage >= 40) return ['D',  '#9a6200', '#fdf3dc'];
-    return                 ['F',  '#b83030', '#fdeaea'];
-}
-
-[$overall_grade, $og_color, $og_bg] = getGrade($overall_percentage);
-?>
-<!DOCTYPE html>
-<html lang="zxx">
-
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <title>Result | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="profile.css">
-    <link rel="stylesheet" href="student.css">
-</head>
-<body>
-<?php
-include "../includes/navbar/student_navbar.php";
-include "../includes/header.php";
+[$overallGrade, $overallClass] = calculateGrade($overallPerc);
 ?>
 
- <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
-                        <li class="breadcrumb-item">Result</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
+<?php include __DIR__ . '/../includes/navbar/student_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Academic Transcript</h4>
+                    <p class="text-muted small">Tracking your journey through educational milestones and excellence.</p>
                 </div>
             </div>
-            
-            <div class="page">
- 
-            <div class="class-badge">
-                <h1 ><b>My Result</b></h1>
-            </div>
-            
-            <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
-                <div>
-                    <div class="class-chip">
-                        <span class="chip-dot"></span>
-                        <?php echo htmlspecialchars($student_info['class_name'] . ' — ' . $student_info['section']); ?>
+            <div class="page-header-right ms-auto">
+                <div class="d-flex align-items-center">
+                    <div class="text-end me-3">
+                        <div class="text-muted small text-uppercase fw-bold fs-10">Current Standing</div>
+                        <div class="fw-bold fs-4 text-dark"><?php echo $overallPerc; ?>%</div>
                     </div>
-                    <p class="page-sub">
-                        <?php echo count($by_subject); ?> subject<?php echo count($by_subject) !== 1 ? 's' : ''; ?>
-                        &middot;
-                        <?php echo count($all_marks); ?> exam<?php echo count($all_marks) !== 1 ? 's' : ''; ?> recorded
-                    </p>
-                </div>
-             
-            </div>
-            <div class="summary-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Overall %</div>
-                    <div class="stat-value green"><?php echo $overall_percentage; ?>%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Marks Obtained</div>
-                    <div class="stat-value"><?php echo $total_obtained; ?> <span style="font-size:16px;color:var(--ink3);">/ <?php echo $total_marks_sum; ?></span></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Exams Recorded</div>
-                    <div class="stat-value"><?php echo count($all_marks); ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Overall Grade</div>
-                    <div class="stat-value" style="line-height:2;">
-                        <span class="grade-pill" style="background:<?php echo $og_bg; ?>;color:<?php echo $og_color; ?>;">
-                            <?php echo $overall_grade; ?>
-                        </span>
+                    <div class="badge <?php echo $overallClass; ?> px-4 py-3 rounded-pill fs-5">
+                        <?php echo $overallGrade; ?>
                     </div>
                 </div>
-            </div>
- 
-            <?php if (empty($by_subject)): ?>
-                <div class="empty-state">
-                    <div class="empty-icon">📋</div>
-                    <div class="empty-title">No results yet</div>
-                    <div class="empty-sub">Your marks will appear here once your teacher records them.</div>
-                </div>
- 
-            <?php else: ?>
- 
-                <div class="section-label">Per-subject breakdown</div>
-                <div class="subjects-grid">
- 
-                    <?php foreach ($by_subject as $subject_name => $exams):
-                        $sub_obtained = array_sum(array_column($exams, 'marks'));
-                        $sub_total    = array_sum(array_column($exams, 'total_marks'));
-                        $sub_pct      = $sub_total > 0
-                            ? round(($sub_obtained / $sub_total) * 100, 1) : 0;
- 
-                        $sub_color = $sub_pct >= 60
-                            ? '#1a7a56' : ($sub_pct >= 40 ? '#9a6200' : '#b83030');
- 
-                        [$grade, $g_color, $g_bg] = getGrade($sub_pct);
- 
-                        $s_init  = strtoupper(mb_substr($subject_name, 0, 1));
-                        $teacher = $exams[0]['teacher_name'];
-                        $type    = $exams[0]['type'];
- 
-                        $type_bg  = $type === 'core' ? '#e6f5ee' : '#eeebfb';
-                        $type_col = $type === 'core' ? '#1a7a56' : '#4a2fa0';
-                        $icon_bg  = $type === 'core' ? '#e6eff9' : '#eeebfb';
-                        $icon_col = $type === 'core' ? '#1a4f8a' : '#4a2fa0';
- 
-                        $words  = explode(' ', $teacher);
-                        $t_init = strtoupper(
-                            mb_substr($words[0], 0, 1) .
-                            (isset($words[1]) ? mb_substr($words[1], 0, 1) : '')
-                        );
-                    ?>
-                    <div class="result-card">
- 
-                        <div class="card-top">
-                            <div class="subj-icon" style="background:<?php echo $icon_bg; ?>;color:<?php echo $icon_col; ?>;">
-                                <?php echo htmlspecialchars($s_init); ?>
-                            </div>
-                            <span class="grade-pill" style="background:<?php echo $g_bg; ?>;color:<?php echo $g_color; ?>;">
-                                <?php echo $grade; ?>
-                            </span>
-                        </div>
- 
-                        <div class="subj-name"><?php echo ($subject_name); ?></div>
-                        <div class="subj-meta">
-                            <?php echo ($exams[0]['code']); ?>
-                            <span class="type-tag" style="background:<?php echo $type_bg; ?>;color:<?php echo $type_col; ?>;">
-                                <?php echo ucfirst(($type)); ?>
-                            </span>
-                        </div>
- 
-                        <div class="teacher-row">
-                            <div class="t-avatar"><?php echo ($t_init); ?></div>
-                            <span class="t-name"><?php echo ($teacher); ?></span>
-                        </div>
- 
-                        <hr class="card-divider">
- 
-                        <div class="pct-row">
-                            <span class="pct-label"><?php echo $sub_obtained; ?> / <?php echo $sub_total; ?> marks</span>
-                            <span class="pct-value" style="color:<?php echo $sub_color; ?>;"><?php echo $sub_pct; ?>%</span>
-                        </div>
-                        <div class="progress-track">
-                            <div class="progress-fill"
-                                style="width:<?php echo $sub_pct; ?>%;background:<?php echo $sub_color; ?>;"></div>
-                        </div>
- 
-                        <?php if (!empty($exams)): ?>
-                        <div class="exam-list">
-                            <?php foreach ($exams as $exam):
-                                [$eg, $ec, $eb] = getGrade($exam['percentage']);
-                            ?>
-                            <div class="exam-row">
-                                <div>
-                                    <span class="exam-name"><?php echo ($exam['exam_type']); ?></span>
-                                    <span class="exam-date">&middot; <?php echo date('d M Y', strtotime($exam['date'])); ?></span>
-                                </div>
-                                <div class="exam-score-wrap">
-                                    <span class="exam-score"><?php echo $exam['marks']; ?>/<?php echo $exam['total_marks']; ?></span>
-                                    <span class="mini-grade" style="background:<?php echo $eb; ?>;color:<?php echo $ec; ?>;">
-                                        <?php echo $eg; ?>
-                                    </span>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
- 
-                    </div>
-                    <?php endforeach; ?>
- 
-                </div>
-                <div class="table-section">
-                    <div class="section-label">All results</div>
-                    <div class="table-wrap">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Code</th>
-                                    <th>Exam Type</th>
-                                    <th>Date</th>
-                                    <th>Marks</th>
-                                    <th>Total</th>
-                                    <th>Percentage</th>
-                                    <th>Grade</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($all_marks as $row):
-                                    [$grade, $g_color, $g_bg] = getGrade($row['percentage']);
-                                ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($row['subject_name']); ?></td>
-                                    <td style="color:var(--ink3);"><?php echo htmlspecialchars($row['code']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['exam_type']); ?></td>
-                                    <td><?php echo date('d M Y', strtotime($row['date'])); ?></td>
-                                    <td><?php echo $row['marks']; ?></td>
-                                    <td><?php echo $row['total_marks']; ?></td>
-                                    <td style="font-weight:500;color:<?php echo $g_color; ?>;">
-                                        <?php echo $row['percentage']; ?>%
-                                    </td>
-                                    <td>
-                                        <span class="mini-grade" style="background:<?php echo $g_bg; ?>;color:<?php echo $g_color; ?>;">
-                                            <?php echo $grade; ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
- 
-                            <tfoot>
-                                <tr style="background:var(--surface2);">
-                                    <td colspan="4" style="font-weight:600;color:var(--ink);padding:11px 16px;">
-                                        Overall Total
-                                    </td>
-                                    <td style="font-weight:600;color:var(--ink);padding:11px 16px;">
-                                        <?php echo $total_obtained; ?>
-                                    </td>
-                                    <td style="font-weight:600;color:var(--ink);padding:11px 16px;">
-                                        <?php echo $total_marks_sum; ?>
-                                    </td>
-                                    <td style="font-weight:600;color:<?php echo $og_color; ?>;padding:11px 16px;">
-                                        <?php echo $overall_percentage; ?>%
-                                    </td>
-                                    <td style="padding:11px 16px;">
-                                        <span class="mini-grade" style="background:<?php echo $og_bg; ?>;color:<?php echo $og_color; ?>;">
-                                            <?php echo $overall_grade; ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
- 
-            <?php endif; ?>
             </div>
         </div>
 
+        <div class="container-fluid mt-4">
+            <?php if (empty($bySubject)): ?>
+                <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                    <div class="card-body py-5 text-center">
+                        <div class="opacity-10 mb-4"><i class="feather-award" style="font-size: 6rem;"></i></div>
+                        <h5 class="text-muted fw-bold">Academic records are currently empty.</h5>
+                        <p class="small text-muted">Check back later once examination results are published.</p>
+                    </div>
+                </div>
+            <?php else: ?>
+                <!-- Subject Cards -->
+                <div class="row g-4 mb-5">
+                    <?php foreach ($bySubject as $name => $exams): 
+                        $sObt = array_sum(array_column($exams, 'marks'));
+                        $sTot = array_sum(array_column($exams, 'total_marks'));
+                        $sPerc = round(($sObt / $sTot) * 100, 1);
+                        [$sGrade, $sClass] = calculateGrade($sPerc);
+                    ?>
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: var(--radius);">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <h6 class="fw-bold text-dark mb-0"><?php echo htmlspecialchars($name); ?></h6>
+                                        <span class="badge <?php echo $sClass; ?> rounded-pill"><?php echo $sGrade; ?></span>
+                                    </div>
+                                    <div class="d-flex align-items-end justify-content-between">
+                                        <div>
+                                            <div class="fs-4 fw-bold text-primary"><?php echo $sPerc; ?>%</div>
+                                            <div class="text-muted small"><?php echo $sObt; ?>/<?php echo $sTot; ?> Total Marks</div>
+                                        </div>
+                                        <div class="text-end text-muted small">
+                                            <?php echo count($exams); ?> Assessments
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-3" style="height: 6px; border-radius: 10px;">
+                                        <div class="progress-bar" style="width: <?php echo $sPerc; ?>%; background: var(--primary);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
 
+                <!-- Detailed History -->
+                <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+                        <h5 class="fw-bold mb-0">Detailed Assessment History</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="ps-4 py-3 text-muted small text-uppercase">Course / Subject</th>
+                                        <th class="py-3 text-muted small text-uppercase">Category</th>
+                                        <th class="py-3 text-muted small text-uppercase text-center">Score</th>
+                                        <th class="py-3 text-muted small text-uppercase text-center">Date</th>
+                                        <th class="pe-4 py-3 text-end text-muted small text-uppercase">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($allMarks as $row): 
+                                        [$rowGrade, $rowClass] = calculateGrade($row['percentage']);
+                                    ?>
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($row['subject_name']); ?></div>
+                                                <div class="small text-muted"><?php echo htmlspecialchars($row['code'] . ' • ' . $row['teacher_name']); ?></div>
+                                            </td>
+                                            <td><span class="badge bg-gray-100 text-dark rounded-pill fw-bold"><?php echo htmlspecialchars($row['exam_type']); ?></span></td>
+                                            <td class="text-center fw-bold">
+                                                <?php echo $row['marks']; ?> / <?php echo $row['total_marks']; ?>
+                                                <div class="text-muted fs-11"><?php echo $row['percentage']; ?>%</div>
+                                            </td>
+                                            <td class="text-center text-muted small"><?php echo date('M d, Y', strtotime($row['date'])); ?></td>
+                                            <td class="pe-4 text-end">
+                                                <span class="badge <?php echo $rowClass; ?> px-3 rounded-pill"><?php echo $rowGrade; ?></span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</main>
 
-        <br>
-
-        <?php
-
-        include "../includes/footer.php";
-        ?>
-    </main>
-
-
-<script src="../assets/vendors/js/vendors.min.js"></script>
-<script src="../assets/vendors/js/daterangepicker.min.js"></script>
-<script src="../assets/vendors/js/apexcharts.min.js"></script>
-<script src="../assets/vendors/js/circle-progress.min.js"></script>
-<script src="../assets/js/common-init.min.js"></script>
-<script src="../assets/js/dashboard-init.min.js"></script>
-<script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

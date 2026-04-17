@@ -1,176 +1,203 @@
 <?php
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('admin'); // Only admins allowed
 
-session_start();
-if(!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
-header("Location:../Login.php");
-exit();
+try {
+    // Fetch stats using secure PDO
+    $stmtStudents = $pdo->query("SELECT COUNT(*) as total FROM students");
+    $totalStudents = $stmtStudents->fetch()['total'];
+
+    $stmtTeachers = $pdo->query("SELECT COUNT(*) as total FROM users WHERE Role = 'teacher'");
+    $totalTeachers = $stmtTeachers->fetch()['total'];
+
+    $stmtClasses = $pdo->query("SELECT COUNT(*) as total FROM classes");
+    $totalClasses = $stmtClasses->fetch()['total'];
+
+    $stmtPending = $pdo->query("SELECT COUNT(*) as total FROM users WHERE Role = 'student' AND Status = 'pending'");
+    $totalPending = $stmtPending->fetch()['total'];
+
+    // Fetch Recent Registrations
+    $recentRegistrations = $pdo->query("
+        SELECT u.Name, c.class_name, u.Status, u.user_id 
+        FROM users u 
+        LEFT JOIN students s ON u.user_id = s.user_id 
+        LEFT JOIN classes c ON s.class_id = c.class_id 
+        WHERE u.Role = 'student' 
+        ORDER BY u.user_id DESC 
+        LIMIT 5
+    ")->fetchAll();
+} catch (Exception $e) {
+    die("Error fetching dashboard statistics: " . $e->getMessage());
 }
 
-
-
-
+$pageTitle = "Admin Dashboard";
 ?>
 
-<!DOCTYPE html>
-<html lang="zxx">
+<?php include __DIR__ . '/../includes/navbar/admin_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Admin Dashboard | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-</head>
-
-<body>
-   <?php
-   include "../includes/navbar/admin_navbar.php";
-   include "../includes/header.php";
-
-   ?>
-   
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="admin.php">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
-                    </ul>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <!-- Page Header -->
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Executive Dashboard</h4>
+                    <p class="text-muted small">Welcome back, Admin. Here is what's happening today.</p>
                 </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
+            </div>
+            <div class="page-header-right ms-auto">
+                <a href="students.php" class="btn btn-primary btn-sm shadow-sm rounded-pill px-4">
+                    <i class="feather-printer me-2"></i>Manage Students
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="container-fluid mt-4">
+            <div class="row g-4">
+                <div class="col-xl-3 col-md-6">
+                    <a href="students.php" class="text-decoration-none transition-up">
+                        <div class="stat-card hover-shadow transition-all">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-primary-soft text-primary me-3">
+                                    <i class="feather-users"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 text-dark"><?php echo number_format($totalStudents); ?></h3>
+                                    <p class="text-muted small mb-0">Total Students</p>
+                                </div>
+                            </div>
                         </div>
+                    </a>
+                </div>
 
+                <div class="col-xl-3 col-md-6">
+                    <a href="view_teachers.php" class="text-decoration-none transition-up">
+                        <div class="stat-card hover-shadow transition-all">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-secondary-soft text-secondary me-3">
+                                    <i class="feather-user"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 text-dark"><?php echo number_format($totalTeachers); ?></h3>
+                                    <p class="text-muted small mb-0">Active Teachers</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <a href="Classes.php" class="text-decoration-none transition-up">
+                        <div class="stat-card hover-shadow transition-all">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-accent-soft text-warning me-3">
+                                    <i class="feather-book-open"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 text-dark"><?php echo number_format($totalClasses); ?></h3>
+                                    <p class="text-muted small mb-0">Current Classes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <a href="registration_request.php" class="text-decoration-none transition-up">
+                        <div class="stat-card hover-shadow transition-all">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-danger-soft text-danger me-3">
+                                    <i class="feather-clock"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 text-dark"><?php echo number_format($totalPending); ?></h3>
+                                    <p class="text-muted small mb-0">Approval Requests</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity / Placeholder for more content -->
+            <div class="row mt-5">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm rounded-lg" style="border-radius: var(--radius);">
+                        <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                            <h5 class="fw-bold mb-0">Recent Registrations</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="ps-4 py-3 text-muted small text-uppercase">Student</th>
+                                            <th class="py-3 text-muted small text-uppercase">Class</th>
+                                            <th class="py-3 text-muted small text-uppercase">Status</th>
+                                            <th class="py-3 text-muted small text-uppercase">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (count($recentRegistrations) > 0): ?>
+                                            <?php foreach ($recentRegistrations as $student): ?>
+                                            <tr class="border-bottom">
+                                                <td class="ps-4 py-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-primary-soft text-primary rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold" style="width:36px; height:36px; font-size:12px;">
+                                                            <?php 
+                                                                $initials = "";
+                                                                $words = explode(" ", $student['Name']);
+                                                                foreach ($words as $w) $initials .= $w[0];
+                                                                echo htmlspecialchars(strtoupper(substr($initials, 0, 2)));
+                                                            ?>
+                                                        </div>
+                                                        <span class="fw-bold text-dark"><?php echo htmlspecialchars($student['Name']); ?></span>
+                                                    </div>
+                                                </td>
+                                                <td><span class="text-muted small"><?php echo htmlspecialchars($student['class_name'] ?? 'Unassigned'); ?></span></td>
+                                                <td>
+                                                    <?php if ($student['Status'] == 'Approved'): ?>
+                                                        <span class="badge bg-success-soft text-success rounded-pill px-3">Active</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-warning-soft text-warning rounded-pill px-3"><?php echo ucfirst($student['Status']); ?></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <a href="students.php" class="btn btn-light btn-sm rounded-pill px-3 fw-bold border-0" style="font-size: 11px;">Manage</a>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center py-5 text-muted small">No recent student registrations found.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                         <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                            <h5 class="fw-bold mb-0">System Health</h5>
+                        </div>
+                        <div class="card-body text-center py-5">
+                            <div class="mb-4">
+                                <i class="feather-shield text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h6 class="fw-bold">Security Shield Active</h6>
+                            <p class="text-muted small">PDO Prepared Statements are protecting your database from SQL Injection.</p>
+                            <button class="btn btn-outline-primary btn-sm rounded-pill w-100 mt-3">Run Audit</button>
+                        </div>
                     </div>
                 </div>
             </div>
-          
         </div>
-       
-
-
-        <div class="home-card-section container-fluid mt-4 ">
-    <div class="row g-4">
-
-      
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Total Students</h6>
-                        <h3 class="fw-bold mb-0"><?php 
-                        
-                        $students=mysqli_query($conn,"SELECT COUNT(*) as total FROM students");
-                        $data=mysqli_fetch_assoc($students);
-                        echo $data['total'];
-                        ?></h3>
-                    </div>
-                    <div class="text-primary">
-                        <i class="feather-users fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Total Teachers</h6>
-                        <h3 class="fw-bold mb-0"><?php 
-                           $teachers=mysqli_query($conn,"SELECT COUNT(*) as total FROM users WHERE Role = 'teacher'");
-                        $data=mysqli_fetch_assoc($teachers);
-                        echo $data['total'];
-                        ?></h3>
-                    </div>
-                    <div class="text-success">
-                        <i class="feather-user fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Total Classes</h6>
-                        <h3 class="fw-bold mb-0">
-
-<?php 
-                           $classes=mysqli_query($conn,"SELECT COUNT(*) as total FROM classes");
-                        $data=mysqli_fetch_assoc($classes);
-                        echo $data['total'];
-                        
-                        ?>
-
-                        </h3>
-                    </div>
-                    <div class="text-warning">
-                        <i class="feather-book-open fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Pending Approvals</h6>
-                        <h3 class="fw-bold mb-0 text-danger"><?php 
-                           $requests=mysqli_query($conn,"SELECT COUNT(*) as total FROM users WHERE Role = 'student' AND status = 'pending'");
-                        $data=mysqli_fetch_assoc($requests);
-                        echo $data['total'];
-                        
-                        ?></h3>
-                    </div>
-                    <div class="text-danger">
-                        <i class="feather-clock fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
-</div>
-<br>
-      <?php
-      
-      include "../includes/footer.php";
-      ?>
-    </main>
+</main>
 
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

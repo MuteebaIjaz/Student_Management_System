@@ -1,195 +1,157 @@
 <?php
-require_once "../includes/conn.php";
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
-    header("location:../Login.php");
-    exit();
-}
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('teacher');
 
+$pageTitle = "Student Roster";
+$teacher_id = $_SESSION['user_id'];
+$class_id = $_GET['class_id'] ?? null;
+$subject_id = $_GET['subject_id'] ?? null;
+
+try {
+    // Fetch assigned classes
+    $classStmt = $pdo->prepare("
+        SELECT DISTINCT c.class_id, c.class_name, c.section 
+        FROM classes c 
+        JOIN class_subject_teacher cst ON cst.class_id = c.class_id
+        WHERE cst.teacher_id = ?
+    ");
+    $classStmt->execute([$teacher_id]);
+    $myClasses = $classStmt->fetchAll();
+
+    $subjects = [];
+    if ($class_id) {
+        $subStmt = $pdo->prepare("
+            SELECT s.subject_id, s.subject_name 
+            FROM subject s 
+            JOIN class_subject_teacher cst ON s.subject_id = cst.subject_id 
+            WHERE cst.teacher_id = ? AND cst.class_id = ?
+        ");
+        $subStmt->execute([$teacher_id, $class_id]);
+        $subjects = $subStmt->fetchAll();
+    }
+
+    $students = [];
+    if ($class_id && $subject_id) {
+        $studentStmt = $pdo->prepare("
+            SELECT s.student_id, s.Roll_no, u.Name, u.Email 
+            FROM students s 
+            JOIN users u ON s.user_id = u.user_id 
+            WHERE s.class_id = ? 
+            ORDER BY s.Roll_no ASC
+        ");
+        $studentStmt->execute([$class_id]);
+        $students = $studentStmt->fetchAll();
+    }
+} catch (Exception $e) {
+    die("Data error: " . $e->getMessage());
+}
 ?>
 
-<!DOCTYPE html>
-<html lang="zxx">
+<?php include __DIR__ . '/../includes/navbar/teacher_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Students | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-</head>
-
-<body>
-    <?php
-    include "../includes/navbar/teacher_navbar.php";
-    include "../includes/header.php";
-
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="teacher.php">Home</a></li>
-                        <li class="breadcrumb-item">Students</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Academic Cohorts</h4>
+                    <p class="text-muted small">Access student profiles and enrollment data across your assigned divisions.</p>
                 </div>
             </div>
-
         </div>
 
-        <div class="registration-container">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="registration-table-card">
-                            <div class="registration-table-header">
-                                <h4>My Students:</h4>
-                            </div>
+        <div class="container-fluid mt-4">
+            <!-- Filter Section -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius);">
+                <div class="card-body p-4">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-muted">Academic Class</label>
+                            <select name="class_id" class="form-control" onchange="this.form.submit()" required>
+                                <option value="" disabled <?php echo !$class_id ? 'selected' : ''; ?>>Select a class...</option>
+                                <?php foreach ($myClasses as $row): ?>
+                                    <option value="<?php echo $row['class_id']; ?>" <?php echo ($class_id == $row['class_id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($row['class_name'] . " - " . $row['section']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-muted">Assigned Subject</label>
+                            <select name="subject_id" class="form-control" required <?php echo !$class_id ? 'disabled' : ''; ?>>
+                                <option value="" disabled <?php echo !$subject_id ? 'selected' : ''; ?>>Select a subject...</option>
+                                <?php foreach ($subjects as $row): ?>
+                                    <option value="<?php echo $row['subject_id']; ?>" <?php echo ($subject_id == $row['subject_id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($row['subject_name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Load Roster</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-                            <div class="card mb-4  mx-4 mx-sm-0 position-relative">
-
-                                <div class="card-body p-sm-5">
-                                    <?php
-                                    if (isset($_SESSION['error'])) {
-                                        echo "<div class='w-100 mt-4 pt-2 text-danger'>" . $_SESSION['error'] . "</div>";
-                                        unset($_SESSION['error']);
-                                    }
-                                    if (isset($_SESSION['success'])) {
-                                        echo "<div class='w-100 mt-4 pt-2 text-success'>" . $_SESSION['success'] . "</div>";
-                                        unset($_SESSION['success']);
-                                    }
-
-                                    ?>
-                                    <form method="GET" class="mb-4">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label>Select Class</label>
-                                                <select name="class_id" class="form-control" required
-                                                    onchange="this.form.submit()">
-                                                    <option disabled selected>Select Class</option>
-                                                    <?php
-                                                    $teacher_id = $_SESSION['user_id'];
-                                                    $classes = mysqli_query($conn, "SELECT DISTINCT c.class_id,c.class_name,c.section 
-                                                        FROM classes c 
-                                                        JOIN class_subject_teacher cst ON cst.class_id = c.class_id
-                                                        WHERE cst.teacher_id = '$teacher_id'");
-                                                    while ($row = mysqli_fetch_assoc($classes)) {
-                                                        $selected = (isset($_GET['class_id']) && $_GET['class_id'] == $row['class_id']) ? "selected" : "";
-                                                        echo "<option value='{$row['class_id']}' $selected>{$row['class_name']} - {$row['section']}</option>";
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </div>
-
-                                            <div class="col-md-4 mb-3">
-                                                <label>Select Subject</label>
-                                                <select name="subject_id" class="form-control" required <?php echo isset($_GET['class_id']) ? "" : "disabled"; ?>>
-                                                    <option disabled selected>Select Subject</option>
-                                                    <?php
-                                                    if (isset($_GET['class_id'])) {
-                                                        $class_id = $_GET['class_id'];
-                                                        $subjects = mysqli_query($conn, "SELECT s.subject_id,s.subject_name 
-                                                             FROM subject s 
-                                                             JOIN class_subject_teacher cst ON cst.subject_id = s.subject_id 
-                                                             WHERE cst.teacher_id = '$teacher_id' 
-                                                             AND cst.class_id = '$class_id'");
-                                                        while ($row = mysqli_fetch_assoc($subjects)) {
-                                                            $selected = (isset($_GET['subject_id']) && $_GET['subject_id'] == $row['subject_id']) ? "selected" : "";
-                                                            echo "<option value='{$row['subject_id']}' $selected>{$row['subject_name']}</option>";
-                                                        }
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </div>
-
-
-                                            <button type="submit" class="btn btn-primary mb-3">Load Students</button>
-                                    </form>
-                                    <?php
-                                    if (isset($_GET['class_id']) && isset($_GET['subject_id'])) {
-                                        $class_id = $_GET['class_id'];
-                                        $subject_id = $_GET['subject_id'];
-
-                                        $students = mysqli_query($conn, "SELECT student_id, Roll_no FROM students WHERE class_id='$class_id' ORDER BY Roll_no ASC");
-
-                                        if (mysqli_num_rows($students) > 0) {
-
-
-
-                                            echo '<br><div class="table-responsive">';
-                                            echo '<table class="table table-bordered">';
-                                            echo '<thead><tr><th>S.No</th><th>Roll Number</th></tr></thead><tbody>';
-
-                                            $count = 1;
-                                            while ($student = mysqli_fetch_assoc($students)) {
-                                                $student_id = $student['student_id'];
-
-                                                echo '<tr>';
-                                                echo '<td>' . $count++ . '</td>';
-                                                echo '<td>' . $student['Roll_no'] . '</td>';
-
-                                                echo '</tr>';
-                                            }
-
-                                            echo '</tbody></table></div>';
-
-
-
-                                            echo '</form>';
-                                        } else {
-                                            echo '<div class="alert alert-info">No students found in this class.</div>';
-                                        }
-                                    }
-                                    ?>
-                                </div>
-                            </div>
+            <!-- Student List -->
+            <?php if ($class_id && $subject_id): ?>
+                <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Enrollment List</h5>
+                        <div class="badge bg-gray-100 text-dark px-3 py-2 rounded-pill small">
+                            <?php echo count($students); ?> Total Students
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="ps-4 py-3 text-muted small text-uppercase" style="width: 100px;">Roll No</th>
+                                        <th class="py-3 text-muted small text-uppercase">Student Name</th>
+                                        <th class="py-3 text-muted small text-uppercase">Contact Email</th>
+                                        <th class="pe-4 py-3 text-end text-muted small text-uppercase">Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (count($students) > 0): ?>
+                                        <?php foreach ($students as $row): ?>
+                                            <tr>
+                                                <td class="ps-4 fw-bold text-primary"><?php echo htmlspecialchars($row['Roll_no']); ?></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-gray-100 text-muted rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold small" style="width:32px; height:32px;">
+                                                            <?php echo strtoupper(substr($row['Name'], 0, 1)); ?>
+                                                        </div>
+                                                        <span class="fw-semibold"><?php echo htmlspecialchars($row['Name']); ?></span>
+                                                    </div>
+                                                </td>
+                                                <td><span class="text-muted small"><?php echo htmlspecialchars($row['Email']); ?></span></td>
+                                                <td class="pe-4 text-end">
+                                                    <a href="student_profile.php?id=<?php echo $row['student_id']; ?>" class="btn btn-action-view btn-sm rounded-pill">
+                                                        <i class="feather-eye"></i> View Profile
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr><td colspan="4" class="text-center py-5">No students currently enrolled in this group.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
+            <?php else: ?>
+                <div class="text-center py-5 mt-5">
+                    <div class="opacity-10 mb-4"><i class="feather-user-check" style="font-size: 5rem;"></i></div>
+                    <h5 class="text-muted fw-bold">Apply filters above to view the student directory.</h5>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</main>
 
-            </div>
-
-            <?php
-            include "../includes/footer.php";
-            ?>
-    </main>
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

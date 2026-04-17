@@ -1,176 +1,183 @@
 <?php
-require_once "../includes/conn.php";
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
-    header("location:../Login.php");
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('teacher');
+
+$pageTitle = "Faculty Communications";
+$teacher_id = $_SESSION['user_id'];
+
+// Process New Announcement
+if (isset($_POST['Add'])) {
+    $title = $_POST['title'];
+    $message = $_POST['message'];
+    $class_id = $_POST['class_id'];
+    $role = $_SESSION['user_role'];
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO announcements (title, message, sender_id, sender_role, target_audience) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $message, $teacher_id, $role, $class_id]);
+        $_SESSION['success'] = "Broadcast dispatched successfully!";
+    } catch (Exception $e) {
+        $_SESSION['error'] = "Transmission failed: " . $e->getMessage();
+    }
+    header("Location: announcements.php");
     exit();
 }
-if (isset($_POST['Add'])) {
 
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $message = mysqli_real_escape_string($conn, $_POST['message']);
-    $sender_id = $_SESSION['user_id'];
-    $sender_role = $_SESSION['user_role'];
-    $target_audience = mysqli_real_escape_string($conn, $_POST['class_id']);
-    if (strlen($title) > 255) {
-        $_SESSION['error'] = "Title is too long (max 255 characters).";
-        header("location: announcements.php");
-        exit();
-    }
+// Fetch Data
+try {
+    // My Assigned Classes for the form
+    $classStmt = $pdo->prepare("
+        SELECT DISTINCT c.class_id, c.class_name, c.section 
+        FROM classes c 
+        JOIN class_subject_teacher cst ON cst.class_id = c.class_id
+        WHERE cst.teacher_id = ?
+    ");
+    $classStmt->execute([$teacher_id]);
+    $myClasses = $classStmt->fetchAll();
 
-    $query = "INSERT INTO `announcements`(`title`, `message`, `sender_id`, `sender_role`, `target_audience`) VALUES ('$title','$message','$sender_id','$sender_role','$target_audience')";
-    $result = mysqli_query($conn, $query);
-    if ($result) {
-        $_SESSION['success'] = "Annoucement added successfully";
-        header("location:announcements.php");
-        exit();
-    } else {
-        $_SESSION['error'] = "Annoucement not added";
-        header("location:announcements.php");
-        exit();
-    }
+    // My Sent Announcements
+    $sentStmt = $pdo->prepare("
+        SELECT a.*, c.class_name, c.section 
+        FROM announcements a
+        LEFT JOIN classes c ON a.target_audience = c.class_id
+        WHERE a.sender_id = ? AND a.sender_role = 'teacher'
+        ORDER BY a.created_at DESC
+    ");
+    $sentStmt->execute([$teacher_id]);
+    $myAnnouncements = $sentStmt->fetchAll();
+} catch (Exception $e) {
+    die("Communication error: " . $e->getMessage());
 }
-
 ?>
 
-<!DOCTYPE html>
-<html lang="zxx">
+<?php include __DIR__ . '/../includes/navbar/teacher_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Annoucements | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-</head>
-
-<body>
-    <?php
-    include "../includes/navbar/teacher_navbar.php";
-    include "../includes/header.php";
-
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="teacher.php">Home</a></li>
-                        <li class="breadcrumb-item">Annoucements</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Broadcast Center</h4>
+                    <p class="text-muted small">Dispatch vital updates and academic notices to your enrolled cohorts.</p>
                 </div>
             </div>
-
+            <div class="page-header-right ms-auto">
+                <button type="button" class="btn btn-primary shadow-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
+                    <i class="feather-plus me-2"></i>New Announcement
+                </button>
+            </div>
         </div>
 
-        <div class="registration-container">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="registration-table-card">
-                            <div class="registration-table-header">
-                                <h4>Add Annoucement:</h4>
-                            </div>
-
-                            <div class="card mb-4  mx-4 mx-sm-0 position-relative">
-
-                                <div class="card-body p-sm-5">
-                                    <?php
-                                    if (isset($_SESSION['error'])) {
-                                        echo "<div class='w-100 pt-2 text-danger'>" . $_SESSION['error'] . "</div>";
-                                        unset($_SESSION['error']);
-                                    }
-                                    if (isset($_SESSION['success'])) {
-                                        echo "<div class='w-100 pt-2 text-success'>" . $_SESSION['success'] . "</div>";
-                                        unset($_SESSION['success']);
-                                    }
-                                    ?>
-
-                                    <form action="" class="w-50  pt-2" method="post">
-                                        <div class="mb-4">
-                                            <input type="text" class="form-control" placeholder=" Annoucement Title"
-                                                name="title" required>
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <!-- Previous Broadcasts -->
+                <div class="col-lg-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                        <h5 class="fw-bold mb-0">Outgoing History</h5>
+                        <div class="text-muted small">Total Sent: <b><?php echo count($myAnnouncements); ?></b></div>
+                    </div>
+                    <?php if (count($myAnnouncements) > 0): ?>
+                        <div class="row g-3">
+                            <?php foreach ($myAnnouncements as $row): ?>
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="card border-0 shadow-sm h-100" style="border-radius: var(--radius);">
+                                        <div class="card-body p-4 d-flex flex-column">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div class="bg-primary-soft text-primary p-2 rounded-circle" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;">
+                                                    <i class="feather-megaphone"></i>
+                                                </div>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
+                                                        <i class="feather-more-horizontal"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                        <li><a class="dropdown-item py-2 small" href="#"><i class="feather-edit-3 me-2 text-primary"></i> Edit</a></li>
+                                                        <li><a class="dropdown-item py-2 small text-danger" href="#"><i class="feather-trash-2 me-2"></i> Remove</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <h6 class="fw-bold mb-1 text-dark"><?php echo htmlspecialchars($row['title']); ?></h6>
+                                            <div class="d-flex align-items-center small text-muted mb-3">
+                                                <i class="feather-users me-1"></i> 
+                                                <?php echo htmlspecialchars($row['class_name'] . ' (' . $row['section'] . ')'); ?>
+                                                <span class="mx-2">•</span>
+                                                <i class="feather-clock me-1"></i>
+                                                <?php echo date('M d, y', strtotime($row['created_at'])); ?>
+                                            </div>
+                                            <p class="text-secondary small mb-0 flex-grow-1" style="line-height: 1.6;">
+                                                <?php echo nl2br(htmlspecialchars(substr($row['message'], 0, 150))); ?><?php echo strlen($row['message']) > 150 ? '...' : ''; ?>
+                                            </p>
                                         </div>
-                                        <div class="mb-4">
-
-                                            <textarea name="message" id="" class="form-control" required
-                                                placeholder="Annoucement Message"></textarea>
-                                        </div>
-
-                                        <div class="mb-4">
-                                            <select name="class_id" class="form-control" required
-                                                aria-placeholder="Select Class">
-                                                <option value="" disabled selected>Select Class</option>
-                                                <?php
-                                                $teacher_id = $_SESSION['user_id'];
-                                                $classes = mysqli_query($conn, "SELECT DISTINCT c.class_id,c.class_name,c.section 
-                                                        FROM classes c 
-                                                        JOIN class_subject_teacher cst ON cst.class_id = c.class_id
-                                                        WHERE cst.teacher_id = '$teacher_id'");
-                                                while ($row = mysqli_fetch_assoc($classes)) {
-                                                    $selected = (isset($_GET['class_id']) && $_GET['class_id'] == $row['class_id']) ? "selected" : "";
-                                                    echo "<option value='{$row['class_id']}' $selected>{$row['class_name']} - {$row['section']}</option>";
-                                                }
-                                                ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="mt-4">
-                                            <button type="submit" class="btn btn-lg btn-primary w-100" name="Add">Add
-                                                Annoucement</button>
-                                        </div>
-                                    </form>
-
+                                    </div>
                                 </div>
-
-
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                            <div class="card-body py-5 text-center">
+                                <div class="opacity-10 mb-3"><i class="feather-mail fs-1"></i></div>
+                                <h6 class="text-muted fw-bold">No announcements sent yet.</h6>
                             </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
+    </div>
+</main>
 
-            <?php
-            include "../includes/footer.php";
-            ?>
-    </main>
+<!-- New Announcement Modal -->
+<div class="modal fade" id="newAnnouncementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+            <div class="modal-header border-bottom-0 p-4">
+                <h5 class="modal-title fw-bold">Compose New Broadcast</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body p-4 pt-0">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Notice Title</label>
+                        <input type="text" name="title" class="form-control bg-gray-100 border-0" placeholder="e.g. End of Term Quiz Details" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Target Audience</label>
+                        <select name="class_id" class="form-control bg-gray-100 border-0" required>
+                            <option value="" disabled selected>Select a class...</option>
+                            <?php foreach ($myClasses as $row): ?>
+                                <option value="<?php echo $row['class_id']; ?>">
+                                    <?php echo htmlspecialchars($row['class_name'] . " - " . $row['section']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Detailed Message</label>
+                        <textarea name="message" class="form-control bg-gray-100 border-0" rows="6" placeholder="Type your message here..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Discard</button>
+                    <button type="submit" name="Add" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                        <i class="feather-send me-2"></i> Dispatch
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'add') {
+        var myModal = new bootstrap.Modal(document.getElementById('newAnnouncementModal'));
+        myModal.show();
+    }
+});
+</script>div>
+    </div>
+</main>
 
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

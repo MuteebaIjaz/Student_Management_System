@@ -1,197 +1,207 @@
 <?php
-session_start();
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('student');
 
+$pageTitle = "Modify Account Details";
+$user_id = $_SESSION['user_id'];
+$errors = [];
+$success = "";
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location:Login.php");
-    exit();
-}
-$user_id = $_SESSION["user_id"];
-$query = "SELECT s.*, u.Email, u.Name
-          FROM students s 
-          JOIN users u ON s.user_id = u.user_id 
-          WHERE s.user_id = '$user_id'";
-$result = mysqli_query($conn, $query);
-$student = mysqli_fetch_assoc($result);
+try {
+    // 1. Fetch current data
+    $stmt = $pdo->prepare("
+        SELECT s.*, u.Email, u.Name, s.Profile_Image AS User_Image
+        FROM students s 
+        JOIN users u ON s.user_id = u.user_id 
+        WHERE s.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    $student = $stmt->fetch();
 
-if (isset($_POST['Update_Profile'])) {
-    $class_id = $_POST['class_id'];
-    $RollNo = $_POST['RollNo'];
-    $Gender = $_POST['Gender'];
-    $DOB = $_POST['DOB'];
-    $PhoneNo = $_POST['PhoneNo'];
-    $Address = $_POST['Address'];
+    if (!$student) {
+        // Redirect to profile completion if record is missing
+        header("Location: ../Complete_profile.php");
+        exit();
+    }
 
-    $update_query = "UPDATE students SET 
-        class_id = '$class_id', 
-        Roll_no = '$RollNo', 
-        gender = '$Gender', 
-        dob = '$DOB', 
-        phone = '$PhoneNo', 
-        address = '$Address' 
-        WHERE user_id = '$user_id'";
+    // 2. Fetch Classes for dropdown
+    $classesStmt = $pdo->query("SELECT * FROM classes ORDER BY class_name ASC, section ASC");
+    $classes = $classesStmt->fetchAll();
 
-    if (mysqli_query($conn, $update_query)) {
-        $_SESSION['success'] = "Profile updated successfully!";
+    // 3. Handle Update
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['Update_Profile'])) {
+        $class_id = $_POST['class_id'];
+        $RollNo   = trim($_POST['RollNo']);
+        $Gender   = $_POST['Gender'];
+        $DOB      = $_POST['DOB'];
+        $PhoneNo  = trim($_POST['PhoneNo']);
+        $Address  = trim($_POST['Address']);
 
-    
-        if (!empty($_FILES['Profile_Image']['name'])) {
-            $fileName = $_FILES['Profile_Image']['name'];
-            $tmp = $_FILES['Profile_Image']['tmp_name'];
-            $fileError = $_FILES['Profile_Image']['error'];
+        $pdo->beginTransaction();
+
+        $updateStmt = $pdo->prepare("
+            UPDATE students SET 
+                class_id = ?, Roll_no = ?, gender = ?, 
+                dob = ?, phone = ?, address = ? 
+            WHERE user_id = ?
+        ");
+        
+        if ($updateStmt->execute([$class_id, $RollNo, $Gender, $DOB, $PhoneNo, $Address, $user_id])) {
             
-            if ($fileError === 0) {
-                $uploadDir = "../student_images/";
-                $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $newFileName = "user_" . $user_id . "_profile." . $fileExt;
-                $typesAllowed = ['png', 'jpeg', 'jpg'];
+            // Image Upload Handling
+            if (!empty($_FILES['Profile_Image']['name'])) {
+                $file = $_FILES['Profile_Image'];
+                $allowed = ['jpg', 'jpeg', 'png'];
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-                if (in_array($fileExt, $typesAllowed)) {
-                    if (move_uploaded_file($tmp, $uploadDir . $newFileName)) {
-                        mysqli_query($conn, "UPDATE students SET Profile_Image = '$newFileName' WHERE user_id = '$user_id'");
+                if (in_array($ext, $allowed)) {
+                    if ($file['size'] <= 2 * 1024 * 1024) { // 2MB Limit
+                        $newFileName = "student_" . $user_id . "_" . time() . "." . $ext;
+                        $uploadPath = __DIR__ . "/../assets/images/profile/" . $newFileName;
+
+                        if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                            // Update students table for personal profile image
+                            $imgUpdate = $pdo->prepare("UPDATE students SET Profile_Image = ? WHERE user_id = ?");
+                            $imgUpdate->execute([$newFileName, $user_id]);
+                        } else {
+                            $errors[] = "Failed to move uploaded file.";
+                        }
+                    } else {
+                        $errors[] = "Image size must be less than 2MB.";
                     }
+                } else {
+                    $errors[] = "Invalid image format. Allowed: JPG, PNG.";
                 }
             }
-        }
 
-        header("Location: student.php");
-        exit();
-    } else {
-        $_SESSION['error'] = "Failed to update profile.";
+            if (empty($errors)) {
+                $pdo->commit();
+                $_SESSION['success_msg'] = "Profile synchronized successfully.";
+                header("Location: profile.php");
+                exit();
+            } else {
+                $pdo->rollBack();
+            }
+        } else {
+            $pdo->rollBack();
+            $errors[] = "Database synchronization failed.";
+        }
     }
+
+} catch (Exception $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    $errors[] = "System Error: " . $e->getMessage();
 }
 
-
-
+$currentImage = !empty($student['User_Image']) ? BASE_URL . 'assets/images/profile/' . $student['User_Image'] : $Default_Avatar;
 ?>
 
-<!DOCTYPE html>
-<html lang="zxx">
+<?php include __DIR__ . '/../includes/navbar/student_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="keyword" content="">
-    <meta name="author" content="theme_ocean">
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Update Identity</h4>
+                    <p class="text-muted small">Maintain your academic profile with accurate and up-to-date information.</p>
+                </div>
+            </div>
+        </div>
 
-    <title>Profile Edit | SMS</title>
+        <div class="container-fluid mt-4">
+            <div class="row justify-content-center">
+                <div class="col-xl-9 col-lg-11">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-body p-0">
+                            <form action="" method="post" enctype="multipart/form-data">
+                                <div class="row g-0">
+                                    <!-- Left Column: Image -->
+                                    <div class="col-md-4 border-end bg-gray-50 p-5 text-center">
+                                        <div class="mb-4">
+                                            <img src="<?php echo $currentImage; ?>" id="previewImg" class="rounded-circle border border-4 border-white shadow-sm mb-3" style="width: 140px; height: 140px; object-fit: cover;">
+                                            <div class="small text-muted mb-3">Professional Identification</div>
+                                            <label class="btn btn-dark btn-sm rounded-pill px-4 cursor-pointer">
+                                                Change Photo
+                                                <input type="file" name="Profile_Image" class="d-none" onchange="previewFile(this)">
+                                            </label>
+                                            <p class="fs-10 text-muted mt-3">Recommended: Square PNG/JPG, Max 2MB.</p>
+                                        </div>
+                                    </div>
 
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11">
+                                    <!-- Right Column: Fields -->
+                                    <div class="col-md-8 p-5">
+                                        <?php if (!empty($errors)): ?>
+                                            <div class="alert alert-danger border-0 small py-2"><?php echo implode('<br>', $errors); ?></div>
+                                        <?php endif; ?>
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css">
+                                        <div class="row g-4">
+                                            <div class="col-md-6 text-start">
+                                                <label class="form-label fs-11 fw-bold text-uppercase text-muted">Roll Number</label>
+                                                <input type="text" name="RollNo" class="form-control" value="<?php echo htmlspecialchars($student['Roll_no']); ?>" required>
+                                            </div>
+                                            <div class="col-md-6 text-start">
+                                                <label class="form-label fs-11 fw-bold text-uppercase text-muted">Academic Class</label>
+                                                <select name="class_id" class="form-select" required>
+                                                    <?php foreach ($classes as $c): ?>
+                                                        <option value="<?php echo $c['class_id']; ?>" <?php echo ($student['class_id'] == $c['class_id'] ? 'selected' : ''); ?>>
+                                                            <?php echo htmlspecialchars($c['class_name'] . ' - ' . $c['section']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 text-start">
+                                                <label class="form-label fs-11 fw-bold text-uppercase text-muted">Gender Expression</label>
+                                                <select name="Gender" class="form-select" required>
+                                                    <option value="Male" <?php echo ($student['gender'] === 'Male' ? 'selected' : ''); ?>>Male</option>
+                                                    <option value="Female" <?php echo ($student['gender'] === 'Female' ? 'selected' : ''); ?>>Female</option>
+                                                    <option value="Other" <?php echo ($student['gender'] === 'Other' ? 'selected' : ''); ?>>Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 text-start">
+                                                <label class="form-label fs-11 fw-bold text-uppercase text-muted">Date of Birth</label>
+                                                <input type="date" name="DOB" class="form-control" value="<?php echo $student['dob']; ?>" required>
+                                            </div>
+                                            <div class="col-md-12 text-start">
+                                                <label class="form-label fs-11 fw-bold text-uppercase text-muted">Mobile Contact (+92)</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-gray-100">+92</span>
+                                                    <input type="text" name="PhoneNo" class="form-control" value="<?php echo htmlspecialchars($student['phone']); ?>" pattern="[0-9]{10}" placeholder="3XXXXXXXXX" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12 text-start">
+                                                <label class="form-label fs-11 fw-bold text-uppercase text-muted">Residential Address</label>
+                                                <textarea name="Address" class="form-control" rows="3" required><?php echo htmlspecialchars($student['address']); ?></textarea>
+                                            </div>
+                                        </div>
 
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css">
-
-</head>
-
-<body>
-
-    <main class="auth-minimal-wrapper">
-        <div class="auth-minimal-inner">
-            <div class="minimal-card-wrapper">
-                <div class="card mb-4 mt-5 mx-4 mx-sm-0 position-relative">
-
-                    <div class="card-body p-sm-5">
-                        <h2 class="fs-20 fw-bolder mb-4 text-center">
-                            Your Profile:
-                        </h2>
-                        <?php
-                        if (isset($_SESSION['error'])) {
-                            echo "<div class='w-100 mt-4 pt-2 text-danger'>" . $_SESSION['error'] . "</div>";
-                            unset($_SESSION['error']);
-                        }
-                        if (isset($_SESSION['success'])) {
-                            echo "<div class='w-100 mt-4 pt-2 text-success'>" . $_SESSION['success'] . "</div>";
-                            unset($_SESSION['success']);
-                        }
-
-                        ?>
-                        <form action="" method="post" class="w-100 mt-4 pt-2" enctype="multipart/form-data">
-                          
-                            <div class="mb-4">
-                                <input type="text" class="form-control" placeholder="Roll Number" name="RollNo"value="<?php echo $student['Roll_no']; ?>"
-                                    required>
-                            </div>
-
-
-  <div class="mb-4">
-                                <select name="Gender" class="form-control" required>
-                                    <option value="" disabled <?php echo empty($student['gender']) ? 'selected' : ''; ?>>Select Gender</option>
-                                    <option value="Male"   <?php echo ($student['gender'] ?? '') === 'Male'   ? 'selected' : ''; ?>>Male</option>
-                                    <option value="Female" <?php echo ($student['gender'] ?? '') === 'Female' ? 'selected' : ''; ?>>Female</option>
-                                    <option value="Other"  <?php echo ($student['gender'] ?? '') === 'Other'  ? 'selected' : ''; ?>>Other</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <select name="class_id" class="form-control" required>
-                                    <option value="" disabled <?php echo empty($student['class_id']) ? 'selected' : ''; ?>>Select Class</option>
-                                    <?php
-                                    $classes_query = "SELECT * FROM `classes` ORDER BY `classes`.`class_name` ASC, `classes`.`section` ASC";
-                                    $classes_result = mysqli_query($conn, $classes_query);
-                                    while ($row = mysqli_fetch_assoc($classes_result)): 
-                                    ?>
-                                        <option value="<?php echo intval($row['class_id']); ?>"
-                                            <?php echo (isset($student['class_id']) && $student['class_id'] == $row['class_id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($row['class_name'] . ' - ' . $row['section']); ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>
-                              <div class="mb-4">
-                                <input
-                                    type="date"
-                                    class="form-control"
-                                    name="DOB"
-                                    value="<?php echo ($student['dob'] ?? ''); ?>"
-                                    required>
-                            </div>
- 
-                            <div class="mb-4">
-                                <div class="input-group">
-                                    <span class="input-group-text">+92</span>
-                                    <input type="text" name="PhoneNo" class="form-control" placeholder="3XXXXXXXXX"value="<?php echo $student['phone']?>"
-                                        pattern="3[0-9]{9}" maxlength="10" required>
+                                        <div class="mt-5 pt-4 border-top d-flex justify-content-between">
+                                            <a href="profile.php" class="btn btn-light rounded-pill px-4 fw-bold">Discard Changes</a>
+                                            <button type="submit" name="Update_Profile" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Save Changes</button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-
-
-                            <div class="mb-4">
-                                <input type="text" class="form-control" placeholder="Address" value="<?php echo $student['address']?>" name="Address" required>
-                            </div>
-                            <div class="mb-4">
-                                <input type="file" name="Profile_Image" id="" class="form-control" 
-                               >
-                        <img src="../student_images/<?php echo $student['Profile_Image'] ?>"
-                         width="150px" alt="Profile Picture">
-                            </div>
-                            <div>
-
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-lg btn-primary w-100" name="Update_Profile">Update
-                                    Profile</button>
-                            </div>
-                        </form>
-
-
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</main>
 
-    <!--! BEGIN: Vendors JS !-->
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <!-- vendors.min.js {always must need to be top} -->
-    <!--! END: Vendors JS !-->
-    <!--! BEGIN: Apps Init  !-->
-    <script src="../assets/js/common-init.min.js"></script>
-    <!--! END: Apps Init !-->
+<script>
+function previewFile(input) {
+    var file = input.files[0];
+    if (file) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            document.getElementById("previewImg").src = reader.result;
+        }
+        reader.readAsDataURL(file);
+    }
+}
+</script>
 
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

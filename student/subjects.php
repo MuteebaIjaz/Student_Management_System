@@ -1,163 +1,128 @@
 <?php
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('student');
 
-session_start();
-if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== "student") {
-    header("Location:../Login.php");
-    exit();
+$pageTitle = "My Learning Path";
+$user_id = $_SESSION['user_id'];
+
+try {
+    // 1. Get Class ID
+    $studentStmt = $pdo->prepare("SELECT class_id FROM students WHERE user_id = ?");
+    $studentStmt->execute([$user_id]);
+    $student = $studentStmt->fetch();
+
+    if (!$student) {
+        // Redirect to profile completion if record is missing
+        header("Location: ../Complete_profile.php");
+        exit();
+    }
+
+    $class_id = $student['class_id'];
+
+    // 2. Get Class Details
+    $classStmt = $pdo->prepare("SELECT * FROM classes WHERE class_id = ?");
+    $classStmt->execute([$class_id]);
+    $class = $classStmt->fetch();
+
+    // 3. Get Subjects and Teachers
+    $subjectsStmt = $pdo->prepare("
+        SELECT s.*, u.Name AS teacher_name 
+        FROM class_subject_teacher cst
+        JOIN subject s ON s.subject_id = cst.subject_id
+        JOIN users u ON u.user_id = cst.teacher_id
+        WHERE cst.class_id = ?
+    ");
+    $subjectsStmt->execute([$class_id]);
+    $subjects = $subjectsStmt->fetchAll();
+
+} catch (Exception $e) {
+    die("Error fetching subjects: " . $e->getMessage());
 }
-$student_id = $_SESSION['user_id'];
-$select_query = "SELECT `class_id` FROM `students` WHERE `user_id`= $student_id";
-$select_result = mysqli_query($conn, $select_query);
-$student = mysqli_fetch_assoc($select_result);
-$class_id = $student['class_id'];
-$query = "SELECT subject.* , users.name AS teacher_name, class_subject_teacher.id 
-FROM class_subject_teacher
-JOIN  subject ON subject.subject_id= class_subject_teacher.subject_id
-JOIN users ON users.user_id= class_subject_teacher.teacher_id
-WHERE class_subject_teacher.class_id=$class_id";
-
-$result = mysqli_query($conn, $query);
-
 ?>
-<!DOCTYPE html>
-<html lang="zxx">
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <title>Subjects | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="profile.css">
-    <link rel="stylesheet" href="student.css">
-</head>
+<?php include __DIR__ . '/../includes/navbar/student_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<body>
-    <?php
-    include "../includes/navbar/student_navbar.php";
-    include "../includes/header.php";
-
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
-                        <li class="breadcrumb-item">Subjects</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Academic Curriculum</h4>
+                    <p class="text-muted small">Explore and manage your enrolled courses for <b><?php echo htmlspecialchars($class['class_name'] . ' - ' . $class['section'] ?? ''); ?></b>.</p>
                 </div>
             </div>
+            <div class="page-header-right ms-auto">
+                <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold">
+                    <?php echo count($subjects); ?> Active Courses
+                </span>
+            </div>
+        </div>
 
-
-            <div class="page">
-                <div class="class-badge">
-                    <h1><b>My Subjects</b></h1>
-                </div>
-
-                <?php
-                $class_query = "SELECT * FROM classes WHERE class_id='$class_id'";
-                $class_result = mysqli_query($conn, $class_query);
-                $class = mysqli_fetch_assoc($class_result);
-                $total_subjects = mysqli_num_rows($result);
-                ?>
-                <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
-                    <div>
-                        <div class="class-chip">
-                            <span class="chip-dot"></span>
-                            <?php echo ($class['class_name'] . ' — ' . $class['section']); ?>
-                        </div>
-                        <p class="page-sub">
-                            <?php echo $total_subjects; ?> subject<?php echo $total_subjects !== 1 ? 's' : ''; ?> assigned
-                        </p>
-                    </div>
-                </div>
-
-                <div class="subjects-grid">
-                    <?php
-                    while ($subjects = mysqli_fetch_assoc($result)) {
-                        $words = explode(' ', $subjects['teacher_name']);
-                        $initials = strtoupper($words[0][0] . (isset($words[1]) ? $words[1][0] : ''));
-                        $type = $subjects['type'];
-                        $type_bg  = $type === 'core' ? '#e6f5ee' : '#eeebfb';
-                        $type_col = $type === 'core' ? '#1a7a56' : '#4a2fa0';
-                        $icon_bg  = $type === 'core' ? '#e6eff9' : '#eeebfb';
-                        $icon_col = $type === 'core' ? '#1a4f8a' : '#4a2fa0';
+        <div class="container-fluid mt-4">
+            <div class="row g-4">
+                <?php if (count($subjects) > 0): ?>
+                    <?php foreach ($subjects as $row): 
+                        $words = explode(' ', $row['teacher_name']);
+                        $initials = strtoupper(substr($words[0], 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
+                        $isCore = strtolower($row['type']) === 'core';
+                        $avatarUrl = null; // Teachers don't have profile images currently
                     ?>
-                        <div class="result-card">
-                            <div class="card-top">
-                                <div class="subj-icon" style="background:<?php echo $icon_bg; ?>;color:<?php echo $icon_col; ?>;">
-                                    <?php echo $subjects['subject_name'][0]; ?>
+                        <div class="col-xl-4 col-lg-6">
+                            <div class="card border-0 shadow-sm h-100 hover-shadow transition-all" style="border-radius: var(--radius); overflow: hidden;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="bg-primary-soft text-primary rounded-lg d-flex align-items-center justify-content-center fw-bold fs-4 me-3" style="width: 50px; height: 50px;">
+                                            <?php echo strtoupper($row['subject_name'][0]); ?>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0"><?php echo htmlspecialchars($row['subject_name']); ?></h6>
+                                            <span class="text-muted small fw-medium"><?php echo htmlspecialchars($row['code']); ?></span>
+                                        </div>
+                                        <div class="ms-auto">
+                                            <span class="badge <?php echo $isCore ? 'bg-success-soft text-success' : 'bg-info-soft text-info'; ?> rounded-pill small">
+                                                <?php echo ucfirst($row['type']); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 bg-gray-100 rounded-lg mb-4">
+                                        <div class="d-flex align-items-center">
+                                            <?php if ($avatarUrl): ?>
+                                                <img src="<?php echo $avatarUrl; ?>" class="rounded-circle me-3 border border-white shadow-sm" style="width: 35px; height: 35px; object-fit: cover;">
+                                            <?php else: ?>
+                                                <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center me-3 small" style="width: 35px; height: 35px;">
+                                                    <?php echo $initials; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div>
+                                                <div class="fs-11 text-muted text-uppercase fw-bold">Assigned Faculty</div>
+                                                <div class="fw-bold text-dark small"><?php echo htmlspecialchars($row['teacher_name']); ?></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <a href="result.php" class="btn btn-outline-primary btn-sm rounded-pill fw-bold">
+                                            <i class="feather-award me-1"></i> View Performance
+                                        </a>
+                                        <a href="attendance.php" class="btn btn-light btn-sm rounded-pill fw-bold text-muted">
+                                            <i class="feather-user-check me-1"></i> Check Attendance
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div class="subj-name"><?php echo ($subjects['subject_name']); ?></div>
-                            <div class="subj-meta">
-                                <?php echo ($subjects['code']); ?>
-                                <span class="type-tag" style="background:<?php echo $type_bg; ?>;color:<?php echo $type_col; ?>;">
-                                    <?php echo ucfirst(($type)); ?>
-                                </span>
-                            </div>
-
-                            <hr class="card-divider">
-
-                            <div class="teacher-row" style="margin-bottom:0;">
-                                <div class="t-avatar"><?php echo $initials; ?></div>
-                                <span class="t-name">
-                                    Teacher: <?php echo ($subjects['teacher_name']); ?>
-                                </span>
-                            </div>
                         </div>
-                    <?php
-                    }
-                    ?>
-                </div>
-            </div></div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center py-5">
+                        <div class="opacity-10 mb-4"><i class="feather-book-open" style="font-size: 5rem;"></i></div>
+                        <h5 class="text-muted">No subjects assigned to your class yet.</h5>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</main>
 
-
-
-        <br>
-
-        <?php
-
-        include "../includes/footer.php";
-        ?>
-    </main>
-
-
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

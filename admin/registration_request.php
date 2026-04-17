@@ -1,130 +1,85 @@
 <?php
-require_once "../includes/conn.php";
-session_start();
-if(!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
-    header("location:../Login.php");
-    exit();
-}
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('admin');
 
+$pageTitle = "Registration Requests";
+
+try {
+    // SECURE PDO FETCH
+    $stmt = $pdo->query("SELECT * FROM users WHERE Role = 'student' AND Status = 'Pending' ORDER BY user_id DESC");
+    $requests = $stmt->fetchAll();
+} catch (Exception $e) {
+    $requests = [];
+    $error = "Error fetching requests.";
+}
 ?>
 
-<!DOCTYPE html>
-<html lang="zxx">
+<?php include __DIR__ . '/../includes/navbar/admin_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Registration Request | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-</head>
-
-<body>
-   <?php
-   include "../includes/navbar/admin_navbar.php";
-   include "../includes/header.php";
-
-   ?>
-   
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="admin.php">Home</a></li>
-                        <li class="breadcrumb-item">Registration Request</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Admission Desk</h4>
+                    <p class="text-muted small">Verify and manage incoming student registration requests.</p>
                 </div>
             </div>
-          
         </div>
-        
-        <div class="registration-container">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="registration-table-card">
-                            <div class="registration-table-header">
-                                <h4>Student Registration Requests</h4>
-                            </div>
-                            
-                            <div class="table-responsive-wrapper">
-                                <table class="table registration-table table-hover">
-                                    <thead>
+
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-gray-100">
                                         <tr>
-                                            <th scope="col">SNO</th>
-                                            <th scope="col">Full Name</th>
-                                            <th scope="col">Email</th>
-                                            <th scope="col">Request Status</th>
-                                            <th scope="col">Action</th>
+                                            <th class="ps-4 py-3 text-muted small text-uppercase">SNO</th>
+                                            <th class="py-3 text-muted small text-uppercase">Applicant</th>
+                                            <th class="py-3 text-muted small text-uppercase">Email</th>
+                                            <th class="py-3 text-muted small text-uppercase">Status</th>
+                                            <th class="py-3 text-muted small text-uppercase text-end pe-4">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php
-                                        $query = "SELECT * FROM `users` WHERE Role='student' and Status = 'Pending'";
-                                        $result = mysqli_query($conn, $query);
-                                        $count = 1;
-                                        
-                                        if (mysqli_num_rows($result) > 0) {
-                                            while ($data = mysqli_fetch_assoc($result)) {
-                                              
-                                        ?>
-                                        <tr>
-                                            <td><?php echo $count; ?></td>
-                                            <td><strong><?php  echo $data['Name']; ?></strong></td>
-                                            <td><?php echo $data['Email']; ?></td>
-                                            <td>
-                                                <span class="status-badge">
-                                                    <?php echo $data['Status']; ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <a href="../Controllers/adminController.php?approve=<?php echo $data['user_id']?>" class="btn-sm-action btn-approve">Approve</a>
-                                                    <a href="../Controllers/adminController.php?reject=<?php echo $data['user_id']?>" class="btn-sm-action btn-reject">Reject</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <?php
-                                                $count++;
-                                            }
-                                        } else {
-                                        ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted-sm">
-                                                <i class="feather-inbox"></i> No registration requests found
-                                            </td>
-                                        </tr>
-                                        <?php
-                                        }
-                                        ?>
+                                        <?php if (count($requests) > 0): ?>
+                                            <?php foreach ($requests as $index => $data): ?>
+                                                <tr class="border-bottom">
+                                                    <td class="ps-4"><?php echo $index + 1; ?></td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="bg-primary-soft text-primary rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width:32px; height:32px; font-size:11px;">
+                                                                <?php echo strtoupper(substr($data['Name'], 0, 2)); ?>
+                                                            </div>
+                                                            <span class="fw-bold"><?php echo htmlspecialchars($data['Name']); ?></span>
+                                                        </div>
+                                                    </td>
+                                                    <td><span class="text-muted small"><?php echo htmlspecialchars($data['Email']); ?></span></td>
+                                                    <td><span class="badge bg-warning-soft text-warning rounded-pill px-3">Pending</span></td>
+                                                    <td class="text-end pe-4">
+                                                        <div class="d-flex justify-content-end gap-2">
+                                                            <a href="../Controllers/adminController.php?approve=<?php echo $data['user_id']?>" class="btn btn-success btn-sm rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
+                                                                <i class="feather-check me-1"></i> Approve
+                                                            </a>
+                                                            <a href="../Controllers/adminController.php?reject=<?php echo $data['user_id']?>" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
+                                                                <i class="feather-x me-1"></i> Reject
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-5">
+                                                    <div class="text-muted mb-3"><i class="feather-inbox fs-1"></i></div>
+                                                    <h6 class="text-muted fw-bold">No Pending Requests</h6>
+                                                    <p class="text-muted small">New applicants will appear here for verification.</p>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -133,19 +88,7 @@ if(!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "admin"){
                 </div>
             </div>
         </div>
+    </div>
+</main>
 
-        <?php
-        include "../includes/footer.php";
-        ?>
-    </main>
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

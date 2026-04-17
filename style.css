@@ -401,18 +401,27 @@
         color: var(--color-text-tertiary);
     }
 
+    /* view-btn: solid primary style — no white-on-white issue */
     .view-btn {
         font-size: 12px;
-        padding: 5px 12px;
-        border: 0.5px solid var(--color-border-secondary);
-        border-radius: var(--border-radius-md);
-        background: transparent;
-        color: var(--color-text-secondary);
+        padding: 5px 14px;
+        border: none;
+        border-radius: 6px;
+        background: #6366f1;
+        color: #ffffff;
         cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
     }
 
     .view-btn:hover {
-        background: var(--color-background-secondary);
+        background: #4f46e5;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
     }
 
 

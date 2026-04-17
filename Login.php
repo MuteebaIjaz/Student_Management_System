@@ -1,163 +1,117 @@
 <?php
-session_start();
-require_once "includes/conn.php";
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth_helper.php';
 
+// Redirect if already logged in
+redirectIfLoggedIn();
+
+$error = $_SESSION['error'] ?? null;
+unset($_SESSION['error']);
+$success = $_SESSION['success'] ?? null;
+unset($_SESSION['success']);
 
 if (isset($_POST['Login'])) {
-
     $Email = $_POST['Email'];
     $Password = $_POST['Password'];
-    $query = "SELECT * FROM `users` WHERE Email = '$Email'";
-    $result = mysqli_query($conn, $query);
 
-    if (mysqli_num_rows($result) == 1) {
-        $user = mysqli_fetch_assoc($result);
-        if (password_verify($Password, $user['Password'])) {
+    try {
+        // SECURE PDO PREPARED STATEMENT
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE Email = ?");
+        $stmt->execute([$Email]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($Password, $user['Password'])) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_name'] = $user['Name'];
             $_SESSION['user_role'] = $user['Role'];
-            if ($user['Role'] == "admin") {
-                header("Location:admin/admin.php");
-                exit();
-            } else if ($user['Role'] == "teacher") {
-                header("Location:teacher/teacher.php");
-                exit();
-            } else if ($user['Role'] == "student") {
-                if ($user['Status'] == "Approved") {
-                    if ($user['profile_status'] == 0) {
-                        header("Location: Complete_profile.php");
-                        exit();
+
+            // Role-based redirection
+            switch ($user['Role']) {
+                case 'admin':
+                    header("Location: " . BASE_URL . "admin/admin.php");
+                    break;
+                case 'teacher':
+                    header("Location: " . BASE_URL . "teacher/teacher.php");
+                    break;
+                case 'student':
+                    if ($user['Status'] == "Approved") {
+                        if ($user['profile_status'] == 0) {
+                            header("Location: " . BASE_URL . "Complete_profile.php");
+                        } else {
+                            header("Location: " . BASE_URL . "student/student.php");
+                        }
                     } else {
-                        header("Location: student/student.php");
-                        exit();
+                        $_SESSION['error'] = "Your account is not approved yet!";
+                        header("Location: " . BASE_URL . "Pending.php");
                     }
-                } else {
-                    $_SESSION['error'] = "Your account is not approved yet!";
-                    header("Location: Pending.php");
-                    exit();
-                }
-
+                    break;
             }
-        } else {
-            $_SESSION['error'] = "Invalid Email or Password!";
-            header("Location: Login.php");
             exit();
+        } else {
+            $error = "Invalid Email or Password!";
         }
-
-    } else {
-        $_SESSION['error'] = "Invalid Email or Password!";
-        header("Location: Login.php");
-        exit();
+    } catch (Exception $e) {
+        $error = "System error. Please try again later.";
     }
 }
-
-
 ?>
-
 <!DOCTYPE html>
-<html lang="zxx">
-
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="keyword" content="">
-    <meta name="author" content="theme_ocean">
-
-    <title>Login | SMS</title>
-
-    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=11">
-
-    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css">
-
-    <link rel="stylesheet" type="text/css" href="assets/css/theme.min.css">
-
+    <title>Login | Zenith Learn</title>
+    <link rel="shortcut icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png">
+    <link rel="stylesheet" type="text/css" href="<?php echo BASE_URL; ?>assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo BASE_URL; ?>assets/css/main.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css">
 </head>
-
 <body>
+    <main class="auth-wrapper">
+        <div class="glass-card text-center">
+            <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="Logo" class="auth-logo">
+            <h2 class="fw-bold mb-1">Welcome Back</h2>
+            <p class="text-muted mb-4">Sign in to Zenith Learn SMS</p>
+            
+            <?php if ($error): ?>
+                <div class="alert alert-danger py-2 small mb-4"><?php echo $error; ?></div>
+            <?php endif; ?>
+            
+            <?php if ($success): ?>
+                <div class="alert alert-success py-2 small mb-4"><?php echo $success; ?></div>
+            <?php endif; ?>
 
-    <main class="auth-minimal-wrapper">
-        <div class="auth-minimal-inner">
-            <div class="minimal-card-wrapper">
-                <div class="card mb-4 mt-5 mx-4 mx-sm-0 position-relative">
-
-                    <div class="card-body p-sm-5">
-                        <h2 class="fs-20 fw-bolder mb-4 text-center">Student Management System</h2>
-                        <h4 class="fs-13 fw-bold mb-2 text-center">Login to your account</h4>
-                        <?php
-                        if (isset($_SESSION['error'])) {
-                            echo "<div class='w-100 mt-4 pt-2 text-danger'>" . $_SESSION['error'] . "</div>";
-                            unset($_SESSION['error']);
-                        }
-                        if (isset($_SESSION['success'])) {
-                            echo "<div class='w-100 mt-4 pt-2 text-success'>" . $_SESSION['success'] . "</div>";
-                            unset($_SESSION['success']);
-                        }
-
-                        ?>
-                        <form action="" class="w-100 mt-4 pt-2" method="post">
-                            <div class="mb-4">
-                                <input type="email" class="form-control" placeholder="Email " name="Email" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="password" class="form-control" placeholder="Password" name="Password"
-                                    required>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="rememberMe">
-                                        <label class="custom-control-label c-pointer" for="rememberMe">Remember
-                                            Me</label>
-                                    </div>
-                                </div>
-                                <div>
-                                    <a href="auth-reset-minimal.html" class="fs-11 text-primary">Forget password?</a>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-lg btn-primary w-100" name="Login">Login</button>
-                            </div>
-                        </form>
-                        <div class="w-100 mt-4 text-center mx-auto">
-                            <div class="mb-4 border-bottom position-relative"><span
-                                    class="small py-1 px-3 text-uppercase text-muted bg-white position-absolute translate-middle">or</span>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                <a href="javascript:void(0);" class="btn btn-light-brand flex-fill"
-                                    data-bs-toggle="tooltip" data-bs-trigger="hover" title="Login with Facebook">
-                                    <i class="feather-facebook"></i>
-                                </a>
-                                <a href="javascript:void(0);" class="btn btn-light-brand flex-fill"
-                                    data-bs-toggle="tooltip" data-bs-trigger="hover" title="Login with Twitter">
-                                    <i class="feather-twitter"></i>
-                                </a>
-                                <a href="javascript:void(0);" class="btn btn-light-brand flex-fill"
-                                    data-bs-toggle="tooltip" data-bs-trigger="hover" title="Login with Github">
-                                    <i class="feather-github text"></i>
-                                </a>
-                            </div>
-                        </div>
-                        <div class="mt-4 text-muted">
-                            <span> Don't have an account?</span>
-                            <a href="Register.php" class="fw-bold">Create an Account</a>
-                        </div>
-                    </div>
+            <form action="" method="post" class="text-start">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Email Address</label>
+                    <input type="email" class="form-control" name="Email" placeholder="name@example.com" required>
                 </div>
-            </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <label class="form-label small fw-bold">Password</label>
+                        <a href="#" class="small text-primary text-decoration-none">Forgot?</a>
+                    </div>
+                    <input type="password" class="form-control" name="Password" placeholder="••••••••" required>
+                </div>
+                <div class="mb-4 d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input me-2" id="remember">
+                    <label class="form-check-label small text-muted" for="remember">Keep me signed in</label>
+                </div>
+                <button type="submit" name="Login" class="btn btn-primary w-100 mb-3">
+                    Sign In
+                </button>
+            </form>
+            
+            <p class="small text-muted mb-0">
+                Don't have an account? 
+                <a href="Register.php" class="text-primary fw-bold text-decoration-none">Create Account</a>
+            </p>
         </div>
     </main>
 
-    <!--! BEGIN: Vendors JS !-->
-    <script src="assets/vendors/js/vendors.min.js"></script>
-    <!-- vendors.min.js {always must need to be top} -->
-    <!--! END: Vendors JS !-->
-    <!--! BEGIN: Apps Init  !-->
-    <script src="assets/js/common-init.min.js"></script>
-    <!--! END: Apps Init !-->
-
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>feather.replace();</script>
 </body>
-
 </html>

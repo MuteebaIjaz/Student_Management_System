@@ -1,173 +1,162 @@
 <?php
-require_once "../includes/conn.php";
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('student');
 
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "student") {
-    header("Location:../Login.php");
-    exit();
+$pageTitle = "Financial Ledger";
+$user_id = $_SESSION['user_id'];
+
+try {
+    // 1. Get Student ID
+    $studentStmt = $pdo->prepare("SELECT student_id, class_id FROM students WHERE user_id = ?");
+    $studentStmt->execute([$user_id]);
+    $student = $studentStmt->fetch();
+
+    if (!$student) {
+        // Redirect to profile completion if record is missing
+        header("Location: ../Complete_profile.php");
+        exit();
+    }
+
+    $student_id = $student['student_id'];
+
+    // 2. Fetch Fee Records
+    $feeStmt = $pdo->prepare("
+        SELECT ft.name, ft.amount, ft.due_date,
+               fp.amount_paid, fp.payment_date, fp.status, fp.remarks
+        FROM fee_types ft
+        LEFT JOIN fee_payments fp ON ft.fee_type_id = fp.fee_type_id AND fp.student_id = ?
+        ORDER BY ft.due_date ASC
+    ");
+    $feeStmt->execute([$student_id]);
+    $fees = $feeStmt->fetchAll();
+
+    // 3. Financial Summary
+    $totalBilled = 0;
+    $totalPaid = 0;
+    foreach ($fees as $f) {
+        $totalBilled += $f['amount'];
+        $totalPaid += $f['amount_paid'] ?? 0;
+    }
+    $totalPending = $totalBilled - $totalPaid;
+
+} catch (Exception $e) {
+    die("Fee Retrieval Error: " . $e->getMessage());
 }
 
-$user_id = $_SESSION["user_id"];
-
-$query = "
-    SELECT s.student_id, u.Name AS student_name, c.class_name, c.section
-    FROM   users u
-    JOIN   students  s ON s.user_id  = u.user_id
-    JOIN   classes   c ON c.class_id = s.class_id
-    WHERE  u.user_id = '$user_id'
-";
-$query_result = mysqli_query($conn, $query);
-$student_info = mysqli_fetch_assoc($query_result);
-$student_id = $student_info['student_id'];
-
-$result_query = "
-   SELECT ft.name, ft.amount, ft.due_date,
-            fp.amount_paid, fp.payment_date, fp.status, fp.remarks
-     FROM fee_types ft
-     LEFT JOIN fee_payments fp 
-       ON ft.fee_type_id = fp.fee_type_id AND fp.student_id = '$student_id'
-     ORDER BY ft.due_date ASC
-";
-$result = mysqli_query($conn, $result_query);
+function getFeeBadge($status) {
+    switch ($status) {
+        case 'Paid': return 'bg-success-soft text-success';
+        case 'Partial': return 'bg-warning-soft text-warning';
+        default: return 'bg-danger-soft text-danger';
+    }
+}
 ?>
-<!DOCTYPE html>
-<html lang="zxx">
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <title>Fee | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="profile.css">
-    <link rel="stylesheet" href="student.css">
-</head>
+<?php include __DIR__ . '/../includes/navbar/student_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<body>
-    <?php
-    include "../includes/navbar/student_navbar.php";
-    include "../includes/header.php";
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="student.php">Home</a></li>
-                        <li class="breadcrumb-item">Fee</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">Financial Statement</h4>
+                    <p class="text-muted small">Transparency in academic investment. View your dues and transaction history.</p>
                 </div>
             </div>
-
-            <div class="page">
-
-                <div class="class-badge">
-                    <h1><b>My Fee</b></h1>
-                </div>
-
-                <div class="result-page-header d-flex align-items-center justify-content-between flex-wrap gap-2 pt-0">
-                    <div>
-                        <div class="class-chip">
-                            <span class="chip-dot"></span>
-                            <?php echo ($student_info['class_name'] . ' — ' . $student_info['section']); ?>
-                        </div>
-
+            <div class="page-header-right ms-auto">
+                <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm px-3 border">
+                    <div class="me-3">
+                        <div class="text-muted fs-10 text-uppercase fw-bold">Outstanding Balance</div>
+                        <div class="fw-bold text-danger">Rs. <?php echo number_format($totalPending); ?></div>
                     </div>
-
-                </div>
-
-                <div class="table-section">
-                    <div class="section-label">Fee Status</div>
-                    <div class="table-wrap">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>Fee Type</th>
-                                    <th>Total Amount</th>
-                                    <th>Due Date</th>
-                                    <th>Amount Paid</th>
-                                    <th>Payment Date</th>
-                                    <th>Status</th>
-                                    <th>Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($fee = mysqli_fetch_assoc($result)): ?>
-                                    <tr>
-                                        <td><?php echo ($fee['name']); ?></td>
-                                        <td><?php echo ($fee['amount']); ?></td>
-                                        <td><?php echo $fee['due_date'] ? date('d M Y', strtotime($fee['due_date'])) : 'N/A'; ?>
-                                        </td>
-                                        <td><?php echo $fee['amount_paid'] ? ($fee['amount_paid']) : '0'; ?></td>
-                                        <td><?php echo $fee['payment_date'] ? date('d M Y', strtotime($fee['payment_date'])) : 'Not Paid'; ?>
-                                        </td>
-                                        <td>
-                                            <?php if ($fee['status'] == 'Paid'): ?>
-                                                <span class="badge bg-success">Paid</span>
-                                            <?php elseif ($fee['status'] == 'Partial'): ?>
-                                                <span class="badge bg-warning">Partial</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-danger">Unpaid</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <?php echo ($fee['remarks'] ?? ''); ?>
-                                        </td>
-
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-
-
-                        </table>
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                        <i class="feather-credit-card"></i>
                     </div>
                 </div>
-
             </div>
         </div>
 
+        <div class="container-fluid mt-4">
+            <!-- Financial Summary Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-body p-4">
+                            <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Total Billed</div>
+                            <h3 class="fw-bold text-dark">Rs. <?php echo number_format($totalBilled); ?></h3>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-dark" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-body p-4">
+                            <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Total Paid</div>
+                            <h3 class="fw-bold text-success">Rs. <?php echo number_format($totalPaid); ?></h3>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: <?php echo ($totalBilled > 0 ? ($totalPaid/$totalBilled)*100 : 0); ?>%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                        <div class="card-body p-4">
+                            <div class="text-muted fs-11 text-uppercase fw-bold mb-1">Pending Dues</div>
+                            <h3 class="fw-bold text-danger">Rs. <?php echo number_format($totalPending); ?></h3>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-danger" style="width: <?php echo ($totalBilled > 0 ? ($totalPending/$totalBilled)*100 : 0); ?>%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Detailed Ledger Table -->
+            <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="fw-bold mb-0">Transaction Ledger</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="ps-4 py-3 text-muted small text-uppercase">Fee Description</th>
+                                    <th class="py-3 text-muted small text-uppercase">Due Date</th>
+                                    <th class="py-3 text-muted small text-uppercase text-center">Billed</th>
+                                    <th class="py-3 text-muted small text-uppercase text-center">Paid</th>
+                                    <th class="py-3 text-muted small text-uppercase">Status</th>
+                                    <th class="pe-4 py-3 text-end text-muted small text-uppercase">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (count($fees) > 0): ?>
+                                    <?php foreach ($fees as $row): 
+                                        $statusClass = getFeeBadge($row['status'] ?? 'Unpaid');
+                                    ?>
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-dark"><?php echo htmlspecialchars($row['name']); ?></td>
+                                            <td class="text-muted small"><?php echo $row['due_date'] ? date('M d, Y', strtotime($row['due_date'])) : 'N/A'; ?></td>
+                                            <td class="text-center fw-bold">Rs. <?php echo number_format($row['amount']); ?></td>
+                                            <td class="text-center text-success fw-bold">Rs. <?php echo number_format($row['amount_paid'] ?? 0); ?></td>
+                                            <td><span class="badge <?php echo $statusClass; ?> px-3 rounded-pill"><?php echo $row['status'] ?? 'Unpaid'; ?></span></td>
+                                            <td class="pe-4 text-end small text-muted fst-italic"><?php echo htmlspecialchars($row['remarks'] ?? '—'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr><td colspan="6" class="text-center py-5">No financial records found.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
-        <br>
-
-        <?php
-
-        include "../includes/footer.php";
-        ?>
-    </main>
-
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

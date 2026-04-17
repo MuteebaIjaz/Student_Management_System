@@ -1,164 +1,106 @@
 <?php
-require_once "../includes/conn.php";
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== "teacher") {
-    header("location:../Login.php");
-    exit();
-}
+require_once __DIR__ . '/../includes/layout_header.php';
+protectPage('teacher');
+
+$pageTitle = "Academic Assignments";
 $teacher_id = $_SESSION['user_id'];
 
-$query = "SELECT 
-    classes.class_name,
-    classes.section,
-    subject.subject_name,
-    subject.code,
-    subject.type,
-    class_subject_teacher.id AS cst_id
-FROM class_subject_teacher
-JOIN subject ON subject.subject_id = class_subject_teacher.subject_id
-JOIN classes ON classes.class_id = class_subject_teacher.class_id
-WHERE class_subject_teacher.teacher_id=$teacher_id";
-
-$result = mysqli_query($conn, $query);
-$classes = mysqli_fetch_assoc($result);
+try {
+    $stmt = $pdo->prepare("
+        SELECT 
+            c.class_name,
+            c.section,
+            s.subject_name,
+            s.code,
+            s.type,
+            cst.id AS cst_id,
+            (SELECT COUNT(*) FROM students WHERE class_id = c.class_id) as student_count
+        FROM class_subject_teacher cst
+        JOIN subject s ON s.subject_id = cst.subject_id
+        JOIN classes c ON c.class_id = cst.class_id
+        WHERE cst.teacher_id = ?
+    ");
+    $stmt->execute([$teacher_id]);
+    $assignedClasses = $stmt->fetchAll();
+} catch (Exception $e) {
+    die("Error fetching assignments: " . $e->getMessage());
+}
 ?>
 
-<!DOCTYPE html>
-<html lang="zxx">
+<?php include __DIR__ . '/../includes/navbar/teacher_navbar.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Classes | SMS</title>
-    <link rel="shortcut icon" type="image/png" href="../assets/images/favicon.png?v=11" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="../assets/css/theme.min.css" />
-    <link rel="stylesheet" href="../style.css">
-</head>
-
-<body>
-    <?php
-    include "../includes/navbar/teacher_navbar.php";
-    include "../includes/header.php";
-
-    ?>
-
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="teacher.php">Home</a></li>
-                        <li class="breadcrumb-item">Classes</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
+<main class="nxl-container">
+    <div class="nxl-content">
+        <div class="page-header px-4 pt-4">
+            <div class="page-header-left">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 fw-bold">My Courses</h4>
+                    <p class="text-muted small">Overview of your pedagogical assignments and class rosters.</p>
                 </div>
             </div>
-
         </div>
 
-        <div class="registration-container">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="registration-table-card">
-                            <div class="registration-table-header">
-                                <h4>My Classes:</h4>
+        <div class="container-fluid mt-4">
+            <?php if (count($assignedClasses) > 0): ?>
+                <div class="row g-4">
+                    <?php foreach ($assignedClasses as $row): ?>
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden" style="border-radius: var(--radius);">
+                                <!-- Decorative accent -->
+                                <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background: var(--primary);"></div>
+                                
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <span class="badge bg-primary-soft text-primary px-3 rounded-pill mb-2 small fw-bold">
+                                                <?php echo htmlspecialchars($row['code']); ?>
+                                            </span>
+                                            <h5 class="fw-bold mb-1"><?php echo htmlspecialchars($row['subject_name']); ?></h5>
+                                            <p class="text-muted small mb-0"><?php echo htmlspecialchars($row['class_name'] . ' - Section ' . $row['section']); ?></p>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="bg-gray-100 rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                <i class="feather-book-open text-muted"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="py-3 border-top border-bottom my-3">
+                                        <div class="row text-center">
+                                            <div class="col-6 border-end">
+                                                <div class="fw-bold text-dark"><?php echo $row['student_count']; ?></div>
+                                                <div class="text-muted fs-11 text-uppercase">Students</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="fw-bold text-dark text-capitalize"><?php echo strtolower($row['type']); ?></div>
+                                                <div class="text-muted fs-11 text-uppercase">Type</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <a href="mark_attendance.php?class_id=<?php echo $row['cst_id']; ?>" class="btn btn-dark btn-sm py-2 shadow-sm">
+                                            <i class="feather-check-circle me-1"></i> Attendance
+                                        </a>
+                                        <a href="result.php?class_id=<?php echo $row['cst_id']; ?>" class="btn btn-outline-primary btn-sm py-2">
+                                            <i class="feather-award me-1"></i> Add Results
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="table-responsive-wrapper">
-                                <table class="table registration-table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">SNO</th>
-                                            <th scope="col">Class Name</th>
-                                            <th scope="col">Class Section</th>
-                                            <th scope="col">Subject Name</th>
-                                            <th scope="col">Subject Type</th>
-
-
-
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        $count = 1;
-                                        if (mysqli_num_rows($result) > 0) {
-                                            while ($class_row = mysqli_fetch_array($result)) {
-
-
-                                                ?>
-                                                <tr>
-                                                    <td><?php echo $count; ?></td>
-                                                    <td><strong><?php echo $class_row['class_name']; ?></strong></td>
-                                                    <td><strong><?php echo $class_row['section'] ?></strong></td>
-                                                    <td><strong><?php echo $class_row['subject_name'] ?></strong></td>
-                                                    <td><strong> <?php echo ucfirst($class_row['type']); ?></strong></td>
-
-
-
-                                                    <td>
-
-                                                    </td>
-                                                </tr>
-                                                <?php
-                                                $count++;
-                                            }
-                                        } else {
-                                            ?>
-                                            <tr>
-                                                <td colspan="5" class="text-center text-muted-sm">
-                                                    No Classes found
-                                                </td>
-                                            </tr>
-                                            <?php
-                                        }
-                                        ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
                         </div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
+            <?php else: ?>
+                <div class="text-center py-5 mt-5">
+                    <div class="opacity-10 mb-4"><i class="feather-box" style="font-size: 5rem;"></i></div>
+                    <h5 class="text-muted fw-bold">You are not currently assigned to any courses.</h5>
+                    <p class="small text-muted">Contact the administrator if you believe this is an error.</p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</main>
 
-            </div>
-
-            <?php
-            include "../includes/footer.php";
-            ?>
-    </main>
-
-    <script src="../assets/vendors/js/vendors.min.js"></script>
-    <script src="../assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="../assets/vendors/js/apexcharts.min.js"></script>
-    <script src="../assets/vendors/js/circle-progress.min.js"></script>
-    <script src="../assets/js/common-init.min.js"></script>
-    <script src="../assets/js/dashboard-init.min.js"></script>
-    <script src="../assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+<?php include __DIR__ . '/../includes/layout_footer.php'; ?>

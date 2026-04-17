@@ -1,74 +1,29 @@
-<!DOCTYPE html>
-<html lang="zxx">
+<?php
+require_once __DIR__ . '/config/config.php';
+session_start();
 
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="keyword" content="" />
-    <meta name="author" content="flexilecode" />
-    <title>Dashboard</title>
-    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png?v=10" />
-    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="assets/vendors/css/vendors.min.css" />
-    <link rel="stylesheet" type="text/css" href="assets/vendors/css/daterangepicker.min.css" />
-    <link rel="stylesheet" type="text/css" href="assets/css/theme.min.css" />
-</head>
+// Centralized entry point redirector
+if (!isset($_SESSION['user_id'])) {
+    header("Location: " . BASE_URL . "Login.php");
+    exit();
+}
 
-<body>
-   <?php
-   include "includes/navbar/admin_navbar.php";
-   include "includes/header.php";
+$role = $_SESSION['user_role'] ?? '';
 
-   ?>
-   
-    <main class="nxl-container">
-        <div class="nxl-content">
-            <div class="page-header">
-                <div class="page-header-left d-flex align-items-center">
-                    <div class="page-header-title">
-                        <h5 class="m-b-10">Dashboard</h5>
-                    </div>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item">Dashboard</li>
-                    </ul>
-                </div>
-                <div class="page-header-right ms-auto">
-                    <div class="page-header-right-items">
-                        <div class="d-flex d-md-none">
-                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                                <i class="feather-arrow-left me-2"></i>
-                                <span>Back</span>
-                            </a>
-                        </div>
-
-                    </div>
-                    <div class="d-md-none d-flex align-items-center">
-                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                            <i class="feather-align-right fs-20"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-          
-        </div>
-        <br>
-        <br>
-      <?php
-      
-      include "includes/footer.php";
-      ?>
-    </main>
-
-    <script src="assets/vendors/js/vendors.min.js"></script>
-    <script src="assets/vendors/js/daterangepicker.min.js"></script>
-    <script src="assets/vendors/js/apexcharts.min.js"></script>
-    <script src="assets/vendors/js/circle-progress.min.js"></script>
-    <script src="assets/js/common-init.min.js"></script>
-    <script src="assets/js/dashboard-init.min.js"></script>
-    <script src="assets/js/theme-customizer-init.min.js"></script>
-</body>
-
-</html>
+switch ($role) {
+    case 'admin':
+        header("Location: " . BASE_URL . "admin/admin.php");
+        break;
+    case 'teacher':
+        header("Location: " . BASE_URL . "teacher/teacher.php");
+        break;
+    case 'student':
+        header("Location: " . BASE_URL . "student/student.php");
+        break;
+    default:
+        session_destroy();
+        header("Location: " . BASE_URL . "Login.php");
+        break;
+}
+exit();
+?>
